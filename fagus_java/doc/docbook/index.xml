@@ -1,0 +1,1517 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN" 
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+
+<book>
+	<bookinfo>
+		<title>Classification and Feature Selection Library</title>
+		<author>
+			<firstname>Leonhard</firstname>
+			<surname>Brunauer</surname>
+			<affiliation>
+				<orgname>Salzburg University</orgname>
+				<orgdiv>Department of Computer Science</orgdiv>
+			</affiliation>
+		</author>
+		<pubdate>2008</pubdate>
+		<revhistory>
+			<revision>
+				<revnumber>0.1</revnumber>
+				<date>19 Jan 2008</date>
+				<authorinitials>LB</authorinitials>
+				<revremark>Initial version</revremark>
+			</revision>
+		</revhistory>
+	</bookinfo>
+	
+	
+	
+	<!--
+	 -	
+	 -	Introduction
+	 - 
+	 -->
+	<chapter id="chapt:introduction">
+		<title>Introduction</title>
+
+		<para>
+		Pattern classification and feature selection are
+		fields of mathematical statistics, which are very
+		helpful in solving diverse real world
+		problems. Classification setups can be described as
+		follows: Inputs of some random observations, such as
+		sensor values, must be assigned to one of several
+		classes. A set of test data, which is already
+		classified, is used to infer the classification
+		function. The overall goal is to obtain discriminative
+		information from a finite set of test data, in order
+		to accurately classify unseen data.  
+		</para>
+
+		<para>
+		Feature selection is the process of selecting the most
+		discriminative information. This step must be done
+		when the number of inputs is high.  Virtually all
+		classification algorithms fail on high dimensional
+		inputs due to the curse of dimensionality.
+		</para>
+
+		<para>
+		This Java library provides a toolkit for doing pattern
+		classification and feature selection. It is meant to
+		be plugged into some real world Java application that
+		requires some pattern classification.  
+		</para>
+	</chapter>
+
+
+
+	<!-- 
+	 - 
+	 - Installation 
+	 - 
+	 --> 
+	<chapter id="chapt:installation">
+	<title>Installation</title>
+
+		<para>
+		To build the library from the sources, it is recommended to use
+		Apache Ant. If you do not have a working installation, please go to the
+		<ulink url="http://ant.apache.org/">Ant website</ulink> and follow the
+		installation instructions.
+		</para>
+
+		<para>
+		To compile the Java sources you will need a Java compiler compatible 
+		with Java 5.0. You can obtain the Java Development Kit 
+		(<acronym>JDK</acronym>), which includes the <command>javac</command> 
+		compiler, from the <ulink url="http://java.sun.com/">Java website</ulink>.
+		</para>
+
+		<para>
+		To build the documentation, you will need Javadoc and Docbook.
+		Javadoc comes along with the JDK. Docbook can be obtained from
+		the <ulink url="http://www.docbook.org/">Docbook website</ulink>.
+		Please, make sure that you obtain the XML Stylesheets, not the
+		SGML version.
+		</para>
+
+		<para>
+		After uncompressing the source archive, go to the base directory 
+		of the installation where you should find a file named 
+		<filename>build.xml</filename>. Now invoke Ant
+
+		<screen><prompt>$</prompt> <userinput>ant</userinput></screen>
+
+		This will create a Java archive of the library 
+		<filename>dist/libclassify.jar</filename>. You should now add
+		this library and all <filename>.jar</filename> files in the <filename>lib</filename>
+		subdirectory to your <envar>CLASSPATH</envar>. For the Bash shell,
+		this can be done by executing
+
+		<screen>
+<prompt>$</prompt> <userinput>export CLASSPATH=dist/libclassify.jar</userinput>
+<prompt>$</prompt> <userinput>for i in lib/*.jar; do export CLASSPATH=$CLASSPATH:$i; done</userinput></screen>
+
+		If you want to build the documentation, you can now run
+		
+		<screen><prompt>$</prompt> <userinput>ant docs</userinput></screen>
+	
+		which will create a subdirectory <filename>docs/html</filename>, where
+		the documentation is written to.
+		</para>
+		
+		<note>
+			<para>
+			For some reasons the default XSLT transformer of the Sun JDK fails
+			for Docbook 4.3 stylesheets. The ant build file has been modified to
+			use the <ulink url="http://xml.apache.org/">Apache Xalan</ulink> 
+			transformer. For building the documentation, please install this
+			software and add the file <filename>xalan.jar</filename> to your
+			classpath.
+			</para>
+		</note>
+
+		<para>
+		The JavaDoc
+		documentation, located in <filename>docs/api</filename>, can be built with
+
+		<screen><prompt>$</prompt> <userinput>ant javadoc</userinput></screen>
+		</para>
+		
+	</chapter>
+
+
+
+	<!--
+	 -
+	 - Working with the Library
+	 - 
+	 -->
+	<chapter id="chapt:working">
+		<title>Working with the Library</title>
+
+		<para>
+		In this chapter we will deal with the programs that come along with this
+		library and give some examples of how to use this library from some host
+		application. Several command line tools for both, feature selection and
+		classification, are included. The library does, however, not include 
+		tools for generating feature vectors. It is thus up to the user to 
+		transform the original data - such as text, images, voice data, etc.
+		- to a vectorial representation. Before introducing the actual tools,
+		we will therefore briefly discuss the file format that is used for
+		input and output data.
+		</para>
+
+		<sect1 id="sect:libsvm_format">
+			<title>File Format</title>
+
+			<para>
+			This library uses the format of LibSVM <!-- TODO: reference -->
+			as the underlying file format for storing vectorial data such as
+			training or test sets. The format is quite simple and is used in
+			some other machine learning projects as well (such as SVM Light
+			<!-- TODO: reference -->). The first column in a file represents
+			the class label (a signed integer). All other columns are pairs of 
+			feature-labels and entries. The feature label is an unsigned integer
+			and is currently ignored. Entries are stored as double precision floating
+			point numbers. The lines can be separated by <literal>\n</literal> (on UNIX) and
+			<literal>\r\n</literal> (on Windows). An example of such a file is shown in
+			<xref linkend="ex:libsvm_format"/>.
+			</para>
+
+			<example id="ex:libsvm_format">
+				<title>A simple example of a vector set in LibSVM format</title>
+				<programlisting><![CDATA[
+-1 1:0.5   2:4.312  3:345e-7
+1  1:-1.24 2:0.34   3:11.21
+1  1:456.1 2:1.2e-5 3:15.34
+-1 1:0.01  2:5.67   3:-0.01
+				]]></programlisting>
+			</example>
+		</sect1>
+
+
+		<sect1 id="sect:tools">
+			<title>Tools</title>
+
+			<sect2 id="sect:tools_train">
+				<title>Classifier training</title>
+
+				<para>
+				The <command>apps.Train</command> tool can be used to generate and
+				train a classifier (and optionally a feature selection as well) and
+				store it to an XML file for future use.
+				</para>
+
+				<cmdsynopsis>
+					<command>java apps.Train</command>
+					<arg>
+						-lda <arg choice="plain">n</arg>
+					</arg>
+					<arg choice="plain"><synopfragmentref linkend="cmd:train_classifier">Classifier</synopfragmentref></arg>
+					<arg><replaceable>ClassifierOptions</replaceable></arg>
+					<arg choice="plain"><replaceable>TrainingData</replaceable></arg>
+					<arg choice="plain"><replaceable>ModelFile</replaceable></arg>
+
+					<synopfragment id="cmd:train_classifier">
+						<group choice="plain">
+							<arg choice="plain">bayes <group choice="plain"><arg>-linear</arg><arg>-regularize <replaceable>alpha</replaceable></arg></group></arg><sbr/>
+							<arg choice="plain">knn <arg><replaceable>k</replaceable></arg></arg><sbr/>
+							<arg choice="plain">parzen <arg><replaceable>radius</replaceable></arg></arg><sbr/>
+							<arg choice="plain">svm <arg><replaceable>c</replaceable></arg><arg><replaceable>gamma</replaceable></arg></arg>
+						</group>	
+					</synopfragment>
+				</cmdsynopsis>
+
+				<para>
+				Linear Discriminant Analysis <option>-lda</option> can be used 
+				to reduce the dimension of the feature space before performing 
+				the classifier training. The optional argument <option>n</option>
+				can be used to manually set the dimension after 
+				<acronym>LDA</acronym>. If this argument is negative, the dimension
+				will be reduced by <option>-n</option>. The default value equals the
+				number of different classes minus one.
+				</para>
+
+				<para>
+				Four different classifier architectures are supported by the library:
+				<variablelist>
+					<varlistentry>
+						<term>Bayes Normal Classifier <option>bayes</option></term>
+						<listitem><para>
+						This classifier assumes that each class is distributed
+						according to some multivariate normal distribution. The 
+						distribution's parameter are estimated using Maximum
+						Likelihood Estimation (MLE). The optional argument 
+						<option>-linear</option> can be used to use the same
+						covariance matrix for all classes. This will result in a
+						linear classification boundary, as opposed to the quadratic
+						boundaries of the default configuration. 
+						</para><para>
+						If the option <option>-regularize</option> is used, a regularized
+						discriminant analysis <citation>Friedman89</citation> 
+						can be performed. The parameter <option>alpha</option>
+						determines the form of the decision boundary. If it is set to 0, 
+						the boundary is linear. If it is set to 1, the classifier is
+						equivalent to the standard Bayes classifier. The regularized 
+						version can, however, create any interpolated version as well. 
+						Usually, setting the parameter to 0.9 is a reasonable choice.
+						</para></listitem>
+					</varlistentry>
+					<varlistentry>
+						<term>K-Nearest-Neighbor classifier <option>knn</option></term>
+						<listitem><para>
+						This classifier searches for the <option>k</option>
+						nearest training vectors in the neighborhood of a 
+						vector. The vector will eventually be assigned to the
+						class, for which the most training vectors fall into 
+						its neighborhood. The default value for <option>k</option>
+						is 1.
+						</para></listitem>
+					</varlistentry>
+					<varlistentry>
+						<term>Parzen Window Classifier <option>parzen</option></term>
+						<listitem><para>
+						TODO
+						</para></listitem>
+					</varlistentry>
+					<varlistentry>
+						<term>Support Vector Machine <option>svm</option></term>
+						<listitem><para>
+						A support vector machine tries to draw decision boundaries
+						directly. This classifier uses a C-SVM and a Gaussian RBF kernel.
+						The parameter <option>c</option> is the trade-off parameter for
+						the C-SVM and <option>gamma</option> is the kernel parameter.
+						This implementation uses the Java version of
+						<ulink url="http://www.csie.ntu.edu.tw/~cjlin/libsvm">LibSVM</ulink>. 
+						LibSVM also includes tools for finding the optimal parameters
+						<option>c</option> and <option>gamma</option>. 
+						</para></listitem>
+					</varlistentry>
+				</variablelist>
+				</para>
+
+				<example id="ex:sample_usage">
+					<title>Sample usage</title>
+					<screen><prompt>$</prompt> <userinput>java apps.Train bayes training_data.libsvm model.xml</userinput></screen>
+					<para>
+					This command will train a Bayes classifier for the data given in
+					<filename>training_data.libsvm</filename> and write the trained
+					classifier to <filename>model.xml</filename>. The resulting model
+					file can later be used to test the classifier on some unknown data.
+					</para>
+<screen><prompt>$</prompt> <userinput>java apps.Test model.xml test_data.libsvm</userinput>
+      \ classified as
+target \  -1      1
+--------------------------------------------------------------------------------
+-1      | 91,41   8,59
+1       | 10,84   89,16
+
+90,0826 % correctly classified
+</screen>					
+				</example>
+			</sect2>
+
+
+			<sect2 id="sect:tools_testing">
+				<title>Testing</title>
+
+				<para>
+				The <command>apps.Test</command> tool is supposed to test a trained
+				model with a set of test vectors. For statistical reasons, the test
+				set should be independent of the set of vectors that were used for
+				training the classifier.
+				</para>
+
+				<cmdsynopsis>
+					<command>java apps.Test</command>
+					<arg choice="plain"><replaceable>ModelFile</replaceable></arg>
+					<arg choice="plain"><replaceable>TestData</replaceable></arg>
+				</cmdsynopsis>
+			</sect2>
+
+
+			<sect2 id="sect:tools_cross_validation">
+				<title>Cross Validation</title>
+
+				<para>
+				The <command>apps.CrossValidation</command> tool can be used if no
+				independent test set is available. The set of given vectors is
+				subsequently split into a test set, which contains a single vector 
+				only, and a training set, which contains all other vectors. This
+				procedure is repeated for every single vector in the set.
+				</para>
+
+				<cmdsynopsis>
+					<command>java apps.CrossValidation</command>
+					<arg>
+						-lda <arg choice="plain">n</arg>
+					</arg>
+					<arg choice="plain"><synopfragmentref linkend="cmd:cross_classifier">Classifier</synopfragmentref></arg>
+					<arg><replaceable>ClassifierOptions</replaceable></arg>
+					<arg choice="plain"><replaceable>TrainingData</replaceable></arg>
+
+					<synopfragment id="cmd:cross_classifier">
+						<group choice="plain">
+							<arg choice="plain">bayes <group choice="plain"><arg>-linear</arg><arg>-regularize <replaceable>alpha</replaceable></arg></group></arg><sbr/>
+							<arg choice="plain">knn <arg><replaceable>k</replaceable></arg></arg><sbr/>
+							<arg choice="plain">parzen <arg><replaceable>radius</replaceable></arg></arg><sbr/>
+							<arg choice="plain">svm <arg><replaceable>c</replaceable></arg><arg><replaceable>gamma</replaceable></arg></arg>
+						</group>	
+					</synopfragment>
+				</cmdsynopsis>
+
+				<para>
+				For a description of the arguments see <xref linkend="sect:tools_train"/>.
+				</para>
+			</sect2>
+
+
+			<sect2 id="sect:tools_feature_extraction">
+				<title>Feature Extraction</title>
+
+				<para>
+				The <command>apps.FeatureExtraction</command> tool performs a dimension
+				reduction by linearly mapping the vectors of the original data to a
+				vector space with lower dimension.
+				</para>
+
+				<cmdsynopsis>
+					<command>java apps.FeatureExtraction</command>
+					<arg choice="plain"><synopfragmentref linkend="cmd:extract">Criterion</synopfragmentref></arg>
+					<arg choice="plain"><replaceable>OriginalData</replaceable></arg>
+					<arg choice="plain"><replaceable>OutputFile</replaceable></arg>
+
+					<synopfragment id="cmd:extract">
+						<group choice="plain">
+							<arg choice="plain">chernoff <arg>n</arg></arg><sbr/>
+							<arg choice="plain">fisher</arg>
+						</group>
+					</synopfragment>
+				</cmdsynopsis>
+
+				<para>
+				The argument <option>fisher</option> can be used to run a 
+				standard Linear Discriminant Analysis (LDA). This will use the
+				Fisher class separability criterion. The argument 
+				<option>chernoff</option> uses an extension of LDA <citation>Loog04</citation>.  
+				</para>
+			</sect2>
+
+
+			<sect2 id="sect:tools_subset_selection">
+				<title>Feature Subset Selection</title>
+
+				<para>
+				The <command>apps.SubsetSelection</command> tool selects the most 
+				discriminative subset of features.
+				</para>
+
+				<cmdsynopsis>
+					<command>java apps.SubsetSelection</command>
+					<arg choice="plain"><synopfragmentref linkend="cmd:subset_algorithm">Algorithm</synopfragmentref></arg>
+					<arg><synopfragmentref linkend="cmd:subset_criterion">Criterion</synopfragmentref></arg>
+					<arg choice="plain"><replaceable>n</replaceable></arg>
+					<arg choice="plain"><replaceable>OriginalData</replaceable></arg>
+					<arg choice="plain"><replaceable>OutputFile</replaceable></arg>
+
+					<synopfragment id="cmd:subset_algorithm">
+						<group choice="plain">
+							<arg choice="plain">bnb</arg>
+							<arg choice="plain">exhaustive</arg>
+							<arg choice="plain">ga</arg>
+							<arg choice="plain">greedy</arg>
+							<arg choice="plain">oscillate</arg>
+							<arg choice="plain">sffs</arg>
+						</group>
+					</synopfragment>
+
+					<synopfragment id="cmd:subset_criterion">
+						<group choice="plain">
+							<arg choice="plain">bayes</arg>
+							<arg choice="plain">bhattacharyya</arg>
+							<arg choice="plain">chernoff</arg>
+							<arg choice="plain">fisher</arg>
+						</group>
+					</synopfragment>
+				</cmdsynopsis>
+
+				<para>
+				This tool supports different algorithms for feature subset selection. The
+				most appropriate choice might depend on the number of features in the
+				original features. Branch and Bound and exhaustive search are only applicable
+				to smaller problems, while the other algorithms work well for larger problems.
+				They have, however, the advantage of finding the optimal subset.
+				<variablelist>
+					<varlistentry>
+						<term>Branch And Bound <option>bnb</option></term>
+						<listitem><para>
+						This algorithms selects the optimal subset of features
+						according to the given criterion function. It is, however,
+						only suitable for smaller problems due to its computational
+						complexity. The implementation is based on the Fast Branch
+						&amp; Bound algorithm <citation>Somol04</citation>.
+						</para></listitem>
+					</varlistentry>
+					<varlistentry>
+						<term>Exhaustive Search <option>exhaustive</option></term>
+						<listitem><para>
+						This is the only general search strategy to search for an
+						optimal subset. It is only applicable to very small problems
+						due to the high computational complexity.
+						</para></listitem>
+					</varlistentry>
+					<varlistentry>
+						<term>Genetic Algorithm <option>ga</option></term>
+						<listitem><para>
+						This is a genetic algorithm for feature selection. The 
+						selection can be configured by editing the file 
+						<filename>resources/Evolution.properties</filename>.
+						</para></listitem>
+					</varlistentry>
+					<varlistentry>
+						<term>Greedy Search <option>greedy</option></term>
+						<listitem><para>
+						This algorithm uses a greedy forward selection.
+						</para></listitem>
+					</varlistentry>
+					<varlistentry>
+						<term>Oscillating Search <option>oscillate</option></term>
+						<listitem><para>
+						This search starts with a greedy solution and tries to
+						optimize it by subsequently dropping features and adding
+						new ones <citation>Somol00</citation>.
+						</para></listitem>
+					</varlistentry>
+					<varlistentry>
+						<term>Sequential Forward Floating Search <option>sffs</option></term>
+						<listitem><para>
+						This is an advanced version of a greedy algorithm that 
+						subsequently adds new features and drops old ones 
+						<citation>Pudil94</citation>.
+						</para></listitem>
+					</varlistentry>
+				</variablelist>
+				</para>
+
+				<para>
+				The different supported criterion functions are:
+				<variablelist>
+					<varlistentry>
+						<term>Bayes Normal Classifier <option>bayes</option></term>
+						<listitem><para>
+						This criterion function measures the classification accuracy
+						of a Bayes normal classifier using a leave-one-out cross validation
+						procedure. A cross-validation procedure is computationally demanding,
+						which is why the running time of this criterion function is higher
+						than those of distance measures.
+						</para></listitem>
+					</varlistentry>
+					<varlistentry>
+						<term>Bhattacharyya Distance <option>bhattacharyya</option></term>
+						<listitem><para>
+						The Bhattacharyya distance <citation>Fukunaga90</citation> is an
+						upper bound on the Bayes error. It can, however, only be used for 
+						two-classes problems.
+						</para></listitem>
+					</varlistentry>
+					<varlistentry>
+						<term>Chernoff Criterion <option>chernoff</option></term>
+						<listitem><para>
+						The Chernoff criterion <citation>Loog04</citation> is a 
+						heteroscedastic extension of the Fisher criterion. That is, in 
+						contrast to the Fisher criterion, this criterion assumes that 
+						different classes have different covariance matrices.
+						</para></listitem>
+					</varlistentry>
+					<varlistentry>
+						<term>Fisher Criterion <option>fisher</option></term>
+						<listitem><para>
+						The Fisher criterion aims to minimize the diversity of vectors
+						within a class and maximize the diversity between different classes.
+						</para></listitem>
+					</varlistentry>
+				</variablelist>
+				</para>
+			</sect2>
+
+			<sect2 id="sect:tools_scale">
+				<title>Scaling</title>
+
+				<para>
+				The <command>apps.Scale</command> program can be used to scale features.
+				For every feature a linear mapping is created such that all all of them
+				fall into a specific range (default [-1,+1]).
+				</para>
+				
+				<cmdsynopsis>
+					<command>java apps.Scale</command>
+					<arg choice="plain"><replaceable>lower</replaceable>:<replaceable>upper</replaceable></arg>
+					<arg choice="plain"><replaceable>OriginalData</replaceable></arg>
+					<arg choice="plain"><replaceable>OutputFile</replaceable></arg>
+				</cmdsynopsis>
+				
+				<para>
+				Scaling of data is an important preliminary for classifiers that depend
+				on distance measures. The most prominent examples are the k-NN classifier 
+				and SVMs. If scaling is omitted, the feature with highest magnitudes 
+				usually excels other discriminative information.
+				</para>
+			</sect2>
+		</sect1>
+		
+		
+		<sect1 id="sect:invoking_classifier">
+			<title>Invoking a Classifier</title>
+			
+			<para>
+			Up to now, we have seen how to use the different tools that come along with
+			the library. However, the tools provide no more than an easy to use interface.
+			The full capabilities cannot be exploited. In the rest of this chapter we 
+			will deal with the invocation of the library from other Java code.
+			</para>
+			
+			<para>
+			One simple scenario is to first train a classifier using some training data
+			and then classify some vector that is unknown to the classifier. That is, 
+			the vector is not part of the training set. An invocation of the classifier
+			is sketched in <xref linkend="ex:prog_classifier"/>.
+			</para>
+			
+			<example id="ex:prog_classifier">
+				<title>Training and invoking a classifier.</title>
+				<programlisting><![CDATA[
+String path = "trainingData.libsvm";
+double[] unknownVector = {0.01, -0.075, 1.72e-4};
+
+VectorSet trainingData = null;
+try {
+	trainingData = (new LibSVMVectorSetReader(path)).parse();
+} catch(IOException e) {
+	System.err.println("Cannot read training data: " + e.getMessage());
+	System.exit(1);
+}
+
+Classifier classifier = new NormalLinearClassifier();
+classifier.train(trainingData);
+
+ClassDescriptor result = classifier.classify(unknownVector);
+System.out.println("Result: " + result.toString());
+				]]></programlisting>
+			</example>
+
+			<para>
+			A different approach is to train a classifier using the
+			<command>apps.Train</command> tool (see <xref linkend="sect:tools_train"/>)
+			as a preprocessing step. To classify the unknown vector, the model
+			file must be parsed and the classifier must be reconstructed from
+			the XML data. This can be seen in <xref linkend="ex:prog_classifier_model"/>.
+			Notice that the training tool might also include some feature selection
+			code. In this case, the feature selection must be performed before
+			the classification step.
+			</para>
+			
+			<example id="ex:prog_classifier_model">
+				<title>Invoking a classifier using a model file.</title>
+				<programlisting><![CDATA[
+String path = "model.xml";
+double[] unknownVector = {0.01, -0.075, 1.72e-4};
+
+ModelReader r = new ModelReader();
+try {
+	r.read(path);
+} catch(IOException e) {
+	System.err.println("Cannot read model file: " + e.getMessage);
+	System.exit(1);
+}
+
+Classifier classifier = r.getClassifier();
+
+if(r.needsSelection()) {
+	// the model has been trained using some feature selection algorithm
+	Selection selection = r.getSelection();
+	unknownVector = selection.mapVector(unknownVector);
+}
+
+ClassDescriptor result = classifier.classify(unknownVector);
+System.out.println("Result: " + result.toString());
+				]]></programlisting>
+			</example>
+		</sect1>
+		
+		
+		<sect1 id="sect:invoking_feature_selection">
+			<title>Invoking a Selection Algorithm</title>
+			
+			<para>
+			This section shows how to use this libraries interfaces to
+			plug a feature selection algorithm into some host application.
+			</para>
+
+			<example id="ex:prog_feature_extraction">
+				<title>Invoking a feature extraction algorithm.</title>
+				<programlisting><![CDATA[
+String imputPath = "input.libsvm";
+String outputPath = "output.libsvm";
+VectorSet original = null;
+
+try {
+	original = (new LibSVMVectorSetReader(inputPath)).parse();
+} catch(IOException e) {
+	System.err.println("Cannot read training data: " + e.getMessage());
+	System.exit(1);
+}
+
+// The Fisher LDA always produces a scalar output.
+FeatureSelection selection = new FisherLinearDiscriminantAnalysis();
+selection.initialize(original);
+				
+try {
+	VectorSetWriter writer = new LibSVMVectorSetWriter(outputPath);
+	writer.write(selection.getMappedData());
+} catch(IOException e) {
+	System.err.println("Cannot write output file: " + e.getMessage());
+	System.exit(1);
+}
+				]]></programlisting>
+			</example>
+			
+			<example id="ex:prog_feature_subset_selection">
+				<title>Invoking a feature subset selection algorithm.</title>
+				<programlisting><![CDATA[
+String imputPath = "input.libsvm";
+String outputPath = "output.libsvm";
+VectorSet original = null;
+int nFeatures = 4; // select the best subset of size 4
+
+try {
+	original = (new LibSVMVectorSetReader(inputPath)).parse();
+} catch(IOException e) {
+	System.err.println("Cannot read training data: " + e.getMessage());
+	System.exit(1);
+}
+
+int dropNFeatures = original.getDimension() - nFeatures;
+
+NestedSubsetAlgorithm alg = new SequentialForwardFloatingSearch();
+alg.addObserver(new SubsetSelectionLogger()); // enable logging
+
+CriterionFunction criterion = new FisherClassSeparabilityCriterion();
+
+FeatureSelection selection = new FeatureSubsetSelection(alg, criterion, dropNFeatures);
+selection.initialize(original);
+
+try {
+	VectorSetWriter writer = new LibSVMVectorSetWriter(outputPath);
+	writer.write(selection.getMappedData());
+} catch(IOException e) {
+	System.err.println("Cannot write output file: " + e.getMessage());
+	System.exit(1);
+}
+				]]></programlisting>
+			</example>
+		</sect1>
+	</chapter>
+	
+	
+	
+	<!--
+	 -
+	 - API
+	 - 
+	 -->
+	<chapter id="chapt:api">
+		<title>API</title>
+		<para>
+		This section is meant to give some brief overview of the Library's API.
+		The complete API documentation is also included in this project in the
+		<ulink url="../api/index.html"><filename class="directory">doc/api</filename>
+		</ulink> subdirectory. It can be built using
+		<screen><prompt>$</prompt> <userinput>ant javadoc</userinput></screen>
+		</para>
+		
+		<variablelist>
+			<title>Package Hirarchy</title>
+			<varlistentry>
+				<term><filename>apps</filename></term>
+				<listitem>
+					<para>
+					Stand alone applications and tools. See <xref linkend="sect:tools"/>.
+					</para>
+				</listitem>
+			</varlistentry>
+			
+			<varlistentry>
+				<term><filename>classify</filename></term>
+				<listitem>
+					<para>
+					Collection of classification algorithms. For each algorithm
+					implementation there is a separate sub-package.
+					</para>
+				</listitem>
+			</varlistentry>
+			
+			<varlistentry>
+				<term><filename>classify.bayes</filename></term>
+				<listitem>
+					<para>
+					This is a collection of Bayesian classification algorithms.
+					It includes the Bayes normal classifier, both, in its linear
+					and quadratic form, and the regularized discriminant analysis 
+					<citation>Friedman89</citation>.
+					</para>
+				</listitem>
+			</varlistentry>
+			
+			<varlistentry>
+				<term><filename>classify.svm</filename></term>
+				<listitem>
+					<para>
+					This is a wrapper for 
+					<ulink url="http://www.csie.ntu.edu.tw/~cjlin/libsvm">LibSVM</ulink>.
+					Notice that this wrapper does not deal with the optimization of
+					the machine and kernel parameters. You can use the script
+					<filename>tools/grid.py</filename>, which comes along with the LibSVM
+					package, to obtain them.
+					</para>
+				</listitem>
+			</varlistentry>
+			
+			<varlistentry>
+				<term><filename>math</filename></term>
+				<listitem>
+					<para>
+					Mathematical and statistical helper classes.
+					</para>
+				</listitem>
+			</varlistentry>
+			
+			<varlistentry>
+				<term><filename>reporting</filename></term>
+				<listitem>
+					<para>
+					Logging and reporting classes.
+					</para>
+				</listitem>
+			</varlistentry>
+			
+			<varlistentry>
+				<term><filename>select</filename></term>
+				<listitem>
+					<para>
+					Collection of feature selection algorithms. This package contains
+					two subpackages: <filename>select.extract</filename> and
+					<filename>select.subset</filename>. The former includes classes for
+					linear feature mapping (Linear Discriminant Analysis), while the 
+					latter includes feature subset selection algorithms.
+					</para>
+				</listitem>
+			</varlistentry>
+			
+			<varlistentry>
+				<term><filename>select.subset</filename></term>
+				<listitem>
+					<para>
+					Collection of feature selection criterion functions and interfaces
+					for subset selection. The criterion functions include statistical
+					measures (<classname>FisherClassSeparabilityCriterion</classname>, 
+					<classname>BhattacharyyaDistance</classname>, and
+					<classname>ChernoffDistance</classname>) and the a wrapper strategy 
+					(<classname>CrossValidationCriterion</classname>) which can be
+					used with any classification algorithm.
+					</para>
+				</listitem>
+			</varlistentry>
+			
+			<varlistentry>
+				<term><filename>select.subset.bnb</filename></term>
+				<listitem>
+					<para>
+						This is a collection of several Branch and Bound algorithm
+						implementations. It provides a basic implementation and
+						several optimized ones. The optimized versions include the
+						<classname>ImprovedBranchAndBound</classname> which utilized
+						preordering of the nodes to obtain a good solution early, 
+						<classname>RecursiveBranchAndBound</classname> which 
+						calculates the criterion function recursively (currently only
+						for <classname>BhattacharyyaDistance</classname>), and the
+						<classname>FastBranchAndBound</classname> which uses heuristics
+						to reduce the number of criterion evaluations. The two former
+						methods have been proposed in <citation>Fukunaga90</citation>,
+						while the latter has been published in <citation>Somol04</citation>.
+					</para>
+				</listitem>
+			</varlistentry>
+			
+			<varlistentry>
+				<term><filename>select.subset.ga</filename></term>
+				<listitem>
+					<para>
+					Feature subset selection using genetic algorithms. The chromosome
+					encoding is due to <citation>Mayer00</citation>.
+					</para>
+				</listitem>
+			</varlistentry>
+			
+			<varlistentry>
+				<term><filename>select.subset.greedy</filename></term>
+				<listitem>
+					<para>
+					This is a collection of "Nested-subest-methods". These methods
+					subsequently increment or decrement the feature subset size until
+					the target size is reached. It includes the standard greedy selection,
+					sequential floating search <citation>Pudil94</citation>, and
+					oscillating search <citation>Somol00</citation>. The greedy and
+					floating search algorithms are implemented both, as forward and
+					backward selection strategies.
+					</para>
+				</listitem>
+			</varlistentry>
+			
+			<varlistentry>
+				<term><filename>util</filename></term>
+				<listitem>
+					<para>
+					Utility classes. Mainly for IO operations.
+					</para>
+				</listitem>
+			</varlistentry>
+		</variablelist>
+	</chapter>
+	
+	
+	
+	<!--
+	 -
+	 - Examples
+	 - 
+	 -->	
+	<chapter id="chapt:examples">
+		<title>Example Applications</title>
+		
+		<para>
+		This package includes example applications that show how to use 
+		the interfaces of this library. The examples can be found in the
+		<filename>examples/</filename> directory in the base directory of
+		this distribution.
+		</para>
+		
+		<sect1 id="sect:fourier">
+			<title>Feature Selection in the two-dimensional Fourier Domain</title>
+			
+			<para>
+			This application provides classification and feature selection for 
+			images. It shows how to select features in the two-dimensional
+			Fourier domain. The approach works by applying ring filters to the
+			Fourier coefficient array and selecting the most discriminative subset
+			of these filters. As a manual search space restriction, ring filters
+			are not allowed to overlap, except, if they are applied to different
+			color channels.
+			</para>
+
+			<note>
+				<para>
+				This application performs Image IO, which cannot be done by means
+				of the standard JRE. The Java Advanced Imageing Library (JAI) must be on the
+				classpath to perform these operations. This library cannot be 
+				distributed with this software, since it is distributed under a commercial
+				license. It can, however, be downloaded free of charge from the 
+				<ulink url="https://jai.dev.java.net/">JAI website</ulink>.
+				</para>
+			</note>			
+			
+			<para>
+			The Fourier approach has been used in <citation>H&auml;fner07a</citation>
+			and <citation>H&auml;fner07b</citation> to classify endoscopical images
+			for colon cancer diagnosis. It is, however, not exclusively targeted to
+			this application, but can be considered a general-purpose strategy.
+			</para>
+
+			<para>
+			Basically, the approach is a two-stage process, where the first stage
+			transforms the images to some vectorial representation. The actual
+			feature selection, that is, the selection of discriminative filters, is
+			done in the second stage. Therefore, the distribution includes several
+			main classes (applications):
+			</para>
+			
+			<variablelist>
+				<varlistentry>
+					<term>SingleRingExtractor</term>
+					<listitem>
+						<cmdsynopsis>
+							<command>java fourier.SingleRingExtractor</command>
+							<arg choice="plain"><replaceable>InputDirectory</replaceable></arg>
+							<arg choice="plain"><replaceable>OutputFile</replaceable></arg>
+						</cmdsynopsis>
+					
+						<para>
+						This application performs the transformation from images to
+						vectors. The resulting vectors are written in LibSVM format.
+						Classification information is obtained from the directory
+						hierarchy of the <option>InputDirectory</option>. That is, for every class, there
+						must be a separate subdirectory that includes all images of
+						this class. The name of this application will get more meaningful
+						in <xref linkend="sect:fourier_2d_filters"/>.
+						</para>
+					</listitem>
+				</varlistentry>
+				
+				<varlistentry>
+					<term>Search</term>
+					<listitem>
+						<cmdsynopsis>
+							<command>java fourier.Search</command>
+							<arg choice="plain"><synopfragmentref linkend="cmd:fourier_search_algorithm">Algorithm</synopfragmentref></arg>
+							<arg choice="plain"><synopfragmentref linkend="cmd:fourier_search_criterion">Criterion</synopfragmentref></arg>
+							<arg choice="plain"><replaceable>N_Features</replaceable></arg>
+							<arg choice="plain"><replaceable>InputData</replaceable></arg>
+							<arg choice="plain"><replaceable>OutputFile</replaceable></arg>
+											
+							<synopfragment id="cmd:fourier_search_algorithm">
+								<group choice="plain">
+									<arg choice="plain">greedy</arg>
+									<arg choice="plain">sffs</arg>
+								</group>
+							</synopfragment>
+
+							<synopfragment id="cmd:fourier_search_criterion">
+								<group choice="plain">
+									<arg choice="plain">rda</arg>
+									<arg choice="plain">bayes</arg>
+								</group>
+							</synopfragment>
+						
+						</cmdsynopsis>						
+
+						<para>
+						The actual feature selection is performed by this application.
+						One can choose among several feature selection strategies and
+						criterion functions and apply them to the vectors as given by the 
+						<filename>SingleRingExtractor</filename>. If <option>N_Features</option>
+						is a positive number, the resulting vectors will have this specified
+						dimension. If, on the other hand, the argument is negative,
+						-<option>N_Features</option> will be dropped from the original
+						data. The resulting feature	vectors, that is, the vectors with 
+						only the selected features present, is then written to some 
+						output file.
+						</para>
+					</listitem>
+				</varlistentry>
+				
+				<varlistentry>
+					<term>FourierImage</term>
+					<listitem>
+						<cmdsynopsis>
+							<command>java fourier.FourierImage</command>
+							<arg choice="plain"><replaceable>InputImage</replaceable></arg>
+							<arg choice="plain"><replaceable>OutputImage</replaceable></arg>
+						</cmdsynopsis>
+
+						<para>
+						This is just a toy application and has nothing to do with the
+						actual classification or feature selection. The tool can be used
+						to get a visualization of the Fourier transform of an image.
+						</para>
+					</listitem>
+				</varlistentry>
+			</variablelist>
+
+			<sect2 id="sect:fourier_2d_filters">
+				<title>Fourier Filters</title>
+				
+				<para>
+				The aim of filtering is to generate features from the Fourier coefficient
+				array. This is usually done by grouping coefficients that share similar
+				information to a scalar value. In this case, we want to group coefficients
+				that have similar frequency information. Those coefficients form rings with 
+				a certain radius and width.
+				</para>
+				
+				<para>
+				Filtering in the frequency domain can be grouped into <emphasis>low-pass</emphasis>,
+				<emphasis>high-pass</emphasis>, and <emphasis>band-pass</emphasis> strategies.
+				Our application focuses on low-pass and ban-pass filtering. Therefore, the
+				filters are not applied to the Fourier coefficient array directly, but to its
+				shifted version. This shift operation moves the low frequency components to
+				the arrays center. The resulting filters are shown in <xref linkend="fig:fourier_filters"/>,
+				where the heavy dots indicate the coefficients that fall into the range of the 
+				filter.
+				</para>
+				
+				<figure id="fig:fourier_filters">
+					<title>Filters in the 2D Fourier Domain.</title>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="../figures/2d_fourier_filter_bandpass.png"/>
+						</imageobject>
+						<textobject><phrase>Illustration of a 2D band-pass filter.</phrase></textobject>
+						<caption>Bandpass Filter</caption>
+					</mediaobject>
+					<mediaobject>
+						<imageobject>
+							<imagedata fileref="../figures/2d_fourier_filter_lowpass.png"/>
+						</imageobject>
+						<textobject><phrase>Illustration of a 2D low-pass filter.</phrase></textobject>
+						<caption>Lowpass Filter</caption>
+					</mediaobject>
+				</figure>
+				
+				<para>
+				Parameterizing a ring can either be done by taking the inner and the outer radius,
+				or by taking the inner radius and the width. In our implementation, the latter
+				approach has been used. That is, filters are represented as radius-width tuples.
+				</para>
+			</sect2>
+			
+			<sect2 id="sect:fourier_feature_search_space">
+				<title>Feature Search Space</title>
+				
+				<para>
+				The search space of this example excludes overlapping ring filters. That is,
+				no two rings in a configuration can have a Fourier coefficient in common.
+				To establish this search space constraints, we use interval search trees
+				<citation>Cormen01</citation>. These trees are augmented binary search trees,
+				where each note represents an occupied interval in the configuration
+				space. That is, no intervals that overlap with an occupied region are
+				allowed to be added to the configuration.
+				</para>
+				
+				<para>
+				The class <classname>SearchRange</classname> provides an iterator over
+				all filters that might be added. The iterator subsequently return 
+				radius-width pairs, going from low radius and low width to high radius
+				and high width. The extension <classname>MultiChannelSearchRange</classname>
+				provides a search range iterator for setups with multiple color channels,
+				such as RGB. While filters within one channel are not allowed to overlap,
+				filters of different channels are, because they do not share common
+				frequency coefficients. The iterator of this extension returns
+				channel-radius-width triples. 
+				</para>
+				
+				<para>
+				Our last missing piece is the class <classname>FourierSearchSpace</classname>,
+				which implements the <interfacename>CloneableFeatureSpace</interfacename>.
+				An instance of this class is plugged into the feature selection library
+				to establish the desired search space constraints. The class does nothing
+				but assigning some integer value to the triples of the 
+				<classname>MultiChannelSearchRange</classname>, so that the feature selection
+				algorithms need not take care about the specific implementation of the
+				search space. 
+				</para>
+				
+				<para>
+				Another customization is the use of the <classname>FourierSelectionComparator</classname>. 
+				This custom comparator tries to make a decision based on the criterion
+				values, that is, select the feature for which the resulting criterion
+				value is higher. If, however, the criterion values for two features are
+				equal, the comparator takes the broader of the two rings.
+				</para>
+			</sect2>
+			
+			<sect2 id="sect:fourier_implementation_issues">
+				<title>Implementation Issues</title>
+				
+				<para>
+				As mentioned above, image transformation and feature selection are 
+				independent steps in our implementation. The image transformation step
+				outputs all ring filters of width one. A filter does, however, not compute
+				the mean of all its Fourier coefficients, but the sum. This approach makes
+				it easier to later reconstruct broader filters from the filters of width
+				one. For a image of size N&times;N, we thus end up with a file holding 
+				vectors of size N/2 times the number of color channels.
+				</para>
+				
+				<para>
+				In the second stage, the class <classname>RingGrouping</classname> is 
+				used to reconstruct the rings of all the supported widths. The reconstruction
+				of a ring works by summing up the entries of the respective single width
+				rings and dividing them by the number of Fourier coefficients that fall
+				into the range of this filter.
+				</para>
+				
+				<para>
+				Another point worth mentioning is logging. The library's design allows
+				to set feature selection loggers for all nested subset algorithms. In 
+				this case, we use the custom class <classname>FourierFeatureSelectionLogger</classname>,
+				which is a slightly modified version of <classname>reporting.SubsetSelectionLogger</classname>.
+				An instance of this class is added as an <interfacename>Observer</interfacename>
+				to the algorithm instance after setting the feature space.
+				</para>
+			</sect2>
+
+		</sect1>
+	</chapter>
+	
+
+
+	<!--
+	 -
+	 - Implementation Details
+	 - 
+	 -->
+	<chapter id="chapt:implementation">
+		<title>Implementation Details</title>
+		
+		<para>
+		TODO
+		</para>
+		
+		
+		<sect1 id="sect:impl_io">
+			<title>Input-Output Facilities</title>
+			
+			<para>
+			One important feature of the classification library is that trained
+			classifiers or feature selection algorithms can be stored to a
+			file. This is usually done via the <command>apps.Train</command> 
+			program as described in <xref linkend="chapt:working"/>. If written to a
+			file, a classifier model is exported to an <acronym>XML</acronym> 
+			tree structure. The actual content of the resulting file depends 
+			on the type of classifier, which is why the grammar is quite 
+			simple and general. As can be seen in <xref linkend="ex:xml"/>, 
+			the model consists of an optional <varname>selection</varname> 
+			section and one section for each class of patterns.
+			</para>
+
+			<example id="ex:xml">
+				<title>A simplified model file with no parameters set</title>
+				<programlisting><![CDATA[
+<?xml version="1.0"?>
+<model class="classify.bayes.NormalMLEClassifier">
+	<!-- classifier parameters -->
+
+	<selection class="select.extract.FisherLinearDiscriminantAnalysis">
+		<!-- selection-specific parameters -->
+	</selection>
+	
+	<class label="class1">
+		<!-- class-specific parameters -->
+	</class>
+	
+	<class label="class2">
+		<!-- class-specific parameters -->
+	</class>
+</model>]]></programlisting>
+			</example>
+			
+			<para>
+			In addition to this basic structural tags, the grammar allows 
+			<varname>param</varname> and <varname>complexParam</varname> tags.
+			The former is used to set simple (scalar, string) parameters. The
+			<varname>complexParam</varname> tag can be used to store vectors
+			and matrices. For a complete example see <xref linkend="ex:xml2"/>.
+			</para>
+			
+			<example id="ex:xml2">
+				<title>A complete example of a classification model</title>
+				<programlisting><![CDATA[
+<?xml version="1.0"?>
+<model xmlns="http://www.cosy.sbg.ac.at/wavelab/ClassificationModel"
+       class="classify.bayes.NormalMLEClassifier">
+
+	<param id="dimension" value="3"/>
+	<param id="type" value="Bayes Quadratic"/>
+
+	<selection class="select.extract.FisherLinearDiscriminantAnalysis">
+		<complexParam id="lda">
+			<matrix rows="3" cols="5">
+				<row>
+					<elem>1.0</elem> <elem>0.0</elem> <elem>0.0</elem> <elem>0.0</elem> <elem>0.0</elem>
+				</row>
+				<row>
+					<elem>0.0</elem> <elem>1.0</elem> <elem>0.0</elem> <elem>0.0</elem> <elem>0.0</elem>
+				</row>
+				<row>
+					<elem>0.0</elem> <elem>0.0</elem> <elem>1.0</elem> <elem>0.0</elem> <elem>0.0</elem>
+				</row>
+			</matrix>
+		</complexParam>
+	</selection>
+
+	<class label="-1">
+		<param id="prior" value="0.5"/>
+		<complexParam id="mean">
+			<vector size="3">
+				<elem>0</elem>
+				<elem>0</elem>
+				<elem>-1.2</elem>
+			</vector>
+		</complexParam>
+		<complexParam id="covariance">
+			<matrix rows="3" cols="3">
+				<row>
+					<elem>1.0</elem> <elem>0.0</elem> <elem>0.0</elem>
+				</row>
+				<row>
+					<elem>0.0</elem> <elem>1.0</elem> <elem>0.0</elem>
+				</row>
+				<row>
+					<elem>0.0</elem> <elem>0.0</elem> <elem>1.0</elem>
+				</row>
+			</matrix>
+		</complexParam>
+	</class>
+
+	<class label="1">
+		<param id="prior" value="0.5"/>
+		<complexParam id="mean">
+			<vector size="3">
+				<elem>1.0</elem>
+				<elem>0</elem>
+				<elem>10.2</elem>
+			</vector>
+		</complexParam>
+		<complexParam id="covariance">
+			<matrix rows="3" cols="3">
+				<row>
+					<elem>1.0</elem> <elem>0.0</elem> <elem>0.0</elem>
+				</row>
+				<row>
+					<elem>0.0</elem> <elem>1.0</elem> <elem>0.0</elem>
+				</row>
+				<row>
+					<elem>0.0</elem> <elem>0.0</elem> <elem>1.0</elem>
+				</row>
+			</matrix>
+		</complexParam>	
+	</class>	
+</model>]]></programlisting>
+			</example>
+			
+			
+			<sect2 id="sect:impl_xml_import">
+				<title>Import of Models</title>
+				
+				<para>
+				An important detail in the above examples is the 
+				<parameter>class</parameter> attribute to the 
+				<varname>model</varname> and <varname>selection</varname> tags.
+				This parameter allows an easy construction of a classifier by
+				using the Java reflection system. Upon parsing a model, the 
+				Java classes defined in these attributes are loaded and a 
+				method named <methodname>newInstance</methodname> is invoked.
+				This method gets handed over the contents of the 
+				<varname>param</varname> and <varname>complexParam</varname>
+				tags and attempts to construct an instance of a classifier
+				(or feature selection procedure). See also <xref linkend="ex:prog_classifier_model"/>.
+				</para>
+			</sect2>
+
+
+			<sect2 id="sect:impl_xml_export">
+				<title>Export of Models</title>
+				
+				<para>
+				TODO
+				</para>
+			</sect2>
+		</sect1>
+	</chapter>
+	
+	
+	<bibliography>
+		<title>Bibliography</title>
+		
+		<bibliodiv><title>Books</title>
+		
+			<biblioentry>
+				<abbrev>Cormen01</abbrev>
+				<authorgroup>
+					<author><firstname>Thomas</firstname><surname>Cormen</surname></author>
+					<author><firstname>Charles</firstname><surname>Leiserson</surname></author>
+					<author><firstname>Ronald</firstname><surname>Rivest</surname></author>
+					<author><firstname>Clifford</firstname><surname>Stein</surname></author>
+				</authorgroup>
+				<title>Introduction to Algorithms</title>
+				<publisher>
+					<publishername>MIT Press</publishername>
+				</publisher>
+				<edition>2nd edition</edition>
+				<pubdate>2001</pubdate>
+			</biblioentry>
+			
+			<biblioentry>
+				<abbrev>Fukunaga90</abbrev>
+				<author><firstname>Keinosuke</firstname><surname>Fukunaga</surname></author>
+				<title>Introduction to Statistical Pattern Recognition</title>
+				<publisher>
+					<publishername>Academic Press</publishername>
+				</publisher>
+				<edition>2nd edition</edition>
+				<pubdate>1990</pubdate>
+			</biblioentry>
+			
+		</bibliodiv>
+		
+		<bibliodiv><title>Articles</title>
+		
+			<biblioentry>
+				<abbrev>Friedman89</abbrev>
+				<biblioset relation="article">
+					<author><firstname>Jerome</firstname><surname>Friedman</surname></author>
+					<title>Regularized Discriminant Analysis</title>
+				</biblioset>
+				<biblioset relation="journal">
+					<title>Journal of the American Statistical Association</title>
+					<volumenum>84</volumenum>
+					<pagenums>165-175</pagenums>
+					<pubdate>1989</pubdate>
+				</biblioset>
+			</biblioentry>
+		
+			<biblioentry>
+				<abbrev>Loog04</abbrev>
+				<biblioset relation="article">
+					<authorgroup>
+						<author><firstname>Marco</firstname><surname>Loog</surname></author>
+						<author><firstname>Robert</firstname><surname>Duin</surname></author>
+					</authorgroup>
+					<title>Linear Dimensionality Reduction via a Heteroscedastic Extension of LDA</title>
+				</biblioset>
+				<biblioset relation="journal">
+					<title>Transactions on Pattern Analysis and Machine Intelligence</title>
+					<volumenum>26</volumenum><issuenum>6</issuenum>
+					<pagenums>732-739</pagenums>
+					<publisher>
+						<publishername>IEEE</publishername>
+					</publisher>
+					<pubdate>June, 2004</pubdate>
+				</biblioset>
+			</biblioentry>
+			
+			<biblioentry>
+				<abbrev>Pudil94</abbrev>
+				<biblioset relation="article">
+					<authorgroup>
+						<author><firstname>Pavel</firstname><surname>Pudil</surname></author>
+						<author><firstname>Jana</firstname><surname>Novovicova</surname></author>
+						<author><firstname>Josef</firstname><surname>Kittler</surname></author>
+					</authorgroup>
+					<title>Floating Search Methods in Feature Selection</title>
+				</biblioset>
+				<biblioset relation="journal">
+					<title>Pattern Recognition Letters</title>
+					<volumenum>15</volumenum><issuenum>11</issuenum>
+					<pagenums>1119-1125</pagenums>
+					<publisher>
+						<publishername>Elsevier Science</publishername>
+					</publisher>
+					<pubdate>November, 1994</pubdate>
+				</biblioset>
+			</biblioentry>
+			
+			<biblioentry>
+				<abbrev>Somol04</abbrev>
+				<biblioset relation="article">
+					<authorgroup>
+						<author><firstname>Petr</firstname><surname>Somol</surname></author>
+						<author><firstname>Pavel</firstname><surname>Pudil</surname></author>
+						<author><firstname>Josef</firstname><surname>Kittler</surname></author>
+					</authorgroup>
+					<title>Fast Branch &amp; Bound Algorithms for Optimal Feature Selection</title>
+				</biblioset>
+				<biblioset relation="journal">
+					<title>Transactions on Pattern Analysis and Machine Intelligence</title>
+					<volumenum>26</volumenum><issuenum>7</issuenum>
+					<pagenums>900-912</pagenums>
+					<publisher>
+						<publishername>IEEE</publishername>
+					</publisher>
+					<pubdate>July, 2004</pubdate>
+				</biblioset>
+			</biblioentry>
+					
+		</bibliodiv>
+
+		<bibliodiv><title>Conference Papers</title>
+			
+			<biblioentry>
+				<abbrev>H&auml;fner07a</abbrev>
+				<biblioset relation="article">
+					<authorgroup>
+						<author><firstname>Michael</firstname><surname>H&auml;fner</surname></author>
+						<author><firstname>Alfred</firstname><surname>Gangl</surname></author>
+						<author><firstname>Leonhard</firstname><surname>Brunauer</surname></author>
+						<author><firstname>Hannes</firstname><surname>Payer</surname></author>
+						<author><firstname>Robert</firstname><surname>Resch</surname></author>
+						<author><firstname>Andreas</firstname><surname>Uhl</surname></author>
+						<author><firstname>Friedrich</firstname><surname>Wrba</surname></author>
+						<author><firstname>Andreas</firstname><surname>V&eacute;csei</surname></author>
+					</authorgroup>
+					<title>Pit Pattern Classification of Zoom-Endoscopical Colon Images Using DCT and FFT</title>
+				</biblioset>
+				<biblioset relation="proceedings">
+					<title>Proceedings of the 20th IEEE International Symposium on Computer-Based Medical Systems (CBMS2007)</title>
+					<publisher>
+						<publishername>IEEE</publishername>
+					</publisher>
+					<pubdate>June 2007</pubdate>
+				</biblioset>
+			</biblioentry>
+
+			<biblioentry>
+				<abbrev>H&auml;fner07b</abbrev>
+				<biblioset relation="article">
+					<authorgroup>
+						<author><firstname>Michael</firstname><surname>H&auml;fner</surname></author>
+						<author><firstname>Alfred</firstname><surname>Gangl</surname></author>
+						<author><firstname>Leonhard</firstname><surname>Brunauer</surname></author>
+						<author><firstname>Hannes</firstname><surname>Payer</surname></author>
+						<author><firstname>Robert</firstname><surname>Resch</surname></author>
+						<author><firstname>Andreas</firstname><surname>Uhl</surname></author>
+						<author><firstname>Friedrich</firstname><surname>Wrba</surname></author>
+						<author><firstname>Andreas</firstname><surname>V&eacute;csei</surname></author>
+					</authorgroup>
+					<title>Pit Pattern Classification of Zoom-Endoscopical Colon Images Using Evolved Fourier Feature Vectors</title>
+				</biblioset>
+				<biblioset relation="proceedings">
+					<title>Proceedings of the 2007 IEEE Machine Learning for Signal Processing Workshop (MLSP2007)</title>
+					<publisher>
+						<publishername>IEEE</publishername>
+					</publisher>
+					<pagenums>99-104</pagenums>
+					<pubdate>August 2007</pubdate>
+				</biblioset>
+			</biblioentry>
+			
+			<biblioentry>
+				<abbrev>Mayer00</abbrev>
+				<biblioset relation="article">
+					<authorgroup>
+						<author><firstname>Helmut</firstname><surname>Mayer</surname></author>
+						<author><firstname>Petr</firstname><surname>Somol</surname></author>
+						<author><firstname>Reinhold</firstname><surname>Huber</surname></author>
+						<author><firstname>Pavel</firstname><surname>Pudil</surname></author>
+					</authorgroup>
+					<title>Improving Statistical Measures of Feature Subsets by Conventional and Evolutionary Approaches</title>
+				</biblioset>
+				<biblioset relation="proceedings">
+					<title>Proceedings of the Joint IAPR International Workshops SSPR 2000 and SPR 2000</title>
+					<pagenums>77-86</pagenums>
+					<pubdate>2000</pubdate>
+				</biblioset>
+			</biblioentry>
+			
+			<biblioentry>
+				<abbrev>Somol00</abbrev>
+				<biblioset relation="article">
+					<authorgroup>
+						<author><firstname>Petr</firstname><surname>Somol</surname></author>
+						<author><firstname>Pavel</firstname><surname>Pudil</surname></author>
+					</authorgroup>
+					<title>Oscillating Search Algorithms for Feature Selection</title>
+				</biblioset>
+				<biblioset relation="proceedings">
+					<title>Proceedings of the 15th International Conference on Pattern Recognition</title>
+					<pagenums>406-409</pagenums>
+					<publisher>
+						<publishername>IEEE</publishername>
+					</publisher>
+					<pubdate>2000</pubdate>
+				</biblioset>
+			</biblioentry>
+		</bibliodiv>
+	</bibliography>
+</book>

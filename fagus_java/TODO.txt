@@ -1,0 +1,47 @@
+Classification:
+===============
+
+- Rewrite the Parzen classifier from scratch. Look up some good source
+  to get rid of this covariance estimation.
+
+- Add feature scaling to the XML model structure.
+
+
+Feature Selection:
+==================
+
+- Introduce a flag to delay the matrix inversion stuff in the criterion
+  functions (Fisher, Bhattacharyya, Chernoff). From a numerical point of
+  view, matrix inversion in more stable for subsets. For nested subset
+  methods, matrix inversion on the original problem might not work at all.
+
+- Introduce a flag that does not only delay the matrix inversion, but the
+  whole matrix estimation for statistical distance measures. For huge
+  subset sizes, the memory requirements will be enormous, since the 
+  required space grows quadratic with the number of features.
+
+Statistics:
+===========
+
+- Write some good statistical test for multivariate distributions of 
+  moderate dimension.
+
+
+Design Issues:
+==============
+
+- Use some 'setParameter(String name, Object value)' to allow arbitrary 
+  parameters for classifiers. Classifiers might require other parameters 
+  than doubles, vectors, or matrices. Maybe create an interface
+  'Parameterizable'.
+
+- Create an interface 'Exportable' and/or 'XMLExportable' that takes out
+  the 'export()' method from the 'Classifier' interface. Maybe this can
+  be solved by writing some Java5 annotations @Export and @Import that
+  completely abstracts the IO from the feature selection and classification
+  interfaces (see for instance the @Test annotation in JUnit 4). 
+
+- Allow sparse LibSVM files. If indices are omitted, there value migth be
+  assumed to be 0.0.
+
+- Get rid of the '.properties' files in 'resources/'.

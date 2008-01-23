@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<project name="Java Library for Classification and Feature Selection" basedir="." default="dist">
+	
+	<description>
+		This project features a library for pattern classification and feature
+		selection.
+	</description>
+	
+	<property name="src" value="${basedir}/src"/>
+	<property name="lib" value="${basedir}/lib"/>
+	<property name="build" value="${basedir}/build"/>
+	<property name="dist" value="${basedir}/dist"/>
+	<property name="test" value="${basedir}/test"/>
+	<property name="doc" value="${basedir}/doc"/>
+	<property name="examples" value="${basedir}/examples"/>
+	<property name="javadoc" value="${doc}/api"/>
+	<property name="resources" value="${basedir}/resources"/>
+	<property name="targets" value="${basedir}/targets"/>
+	
+	<property name="project.name" value="libclassify"/>
+	<property name="project.version" value="0.1"/>
+	
+	<property name="build.compiler" value="modern"/>
+	
+	<import file="${targets}/build-test.xml"/>
+	
+	<target name="init" description="Create output directories">
+		<mkdir dir="${build}"/>
+		<mkdir dir="${dist}"/>
+		<mkdir dir="${javadoc}"/>
+		<mkdir dir="${doc}/html"/>
+	</target>
+	
+	<target name="compile" depends="init" description="Compile source files">
+		<javac destdir="${build}"
+		       srcdir="${src}"
+		       source="1.5"
+		       target="1.5"
+		       debug="on">
+			<classpath>
+				<pathelement location="${lib}/Jama-1.0.2.jar"/>
+				<pathelement location="${lib}/JEvolution.jar"/>
+				<pathelement location="${lib}/libsvm.jar"/>
+			</classpath>
+		</javac>
+	</target>
+	
+	<target name="dist" depends="compile" description="Create archives from compiled files">
+		<jar destfile="${dist}/${project.name}.jar"
+		     basedir="${build}">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}"/>
+			</manifest>
+		</jar>
+	</target>
+	
+	<target name="docs" depends="init" description="Create Docbook documentation">
+		<copy file="${doc}/styles/default.css" tofile="${doc}/html/default.css"/>
+		<xslt basedir="${doc}"
+		      in="${doc}/docbook/index.xml"
+		      destdir="${doc}/html"
+		      out="${doc}/html/index.html"
+			  extension=".html"
+		      style="/usr/share/xml/docbook/stylesheet/nwalsh/xhtml/chunk.xsl">
+			<xmlcatalog>
+				<dtd publicId="-//OASIS//DTD DocBook XML V4.3//EN"
+				     location="/usr/share/xml/docbook/schema/dtd/4.3/docbookx.dtd"/>
+			</xmlcatalog>
+			<!--
+				FIXME: For some reason, the JDK 5.0 default transformer factory does
+				       not work. According to the release notes, it is based on 
+				       XSLTC of Xalan 2.6 . Xalan 2.7.0, however, does work.
+			-->
+			<factory name="org.apache.xalan.processor.TransformerFactoryImpl"/>
+			<outputproperty name="method" value="xml"/>
+			<outputproperty name="standalone" value="yes"/>
+			<outputproperty name="indent" value="no"/>
+			<outputproperty name="encoding" value="iso-8859-1"/>
+			<param name="html.stylesheet" expression="default.css"/>
+		</xslt>
+	</target>
+	
+	<target name="javadoc" depends="init" description="Create Javadoc">
+		<javadoc sourcepath="${src}" destdir="${javadoc}">
+			<packageset dir="src" defaultexcludes="yes"/>
+		</javadoc>
+	</target>
+	
+	<target name="src-dist" depends="init" description="Create source distribution">
+		<tar destfile="${dist}/${project.name}-src-${project.version}.tar.gz" compression="gzip">
+			<tarfileset dir="${src}" prefix="src"/>
+			<tarfileset dir="${doc}/docbook" prefix="doc/docbook"/>
+			<tarfileset dir="${doc}/figures" prefix="doc/figures"/>
+			<tarfileset dir="${doc}/styles" prefix="doc/styles"/>
+			<tarfileset dir="${lib}" prefix="lib"/>
+			<tarfileset dir="${test}" prefix="test"/>
+			<tarfileset dir="${examples}" prefix="examples"/>
+			<tarfileset dir="${targets}" prefix="targets"/>
+			<tarfileset dir="${resources}" prefix="resources"/>
+			<tarfileset dir="${basedir}">
+				<include name="build.xml"/>
+				<include name="README.txt"/>
+				<include name="LICENSE.txt"/>
+				<include name="TODO.txt"/>
+			</tarfileset>
+		</tar>
+	</target>
+	
+	<target name="bin-dist" depends="dist,docs" description="Create binary archive">
+		<tar destfile="${dist}/${project.name}-bin-${project.version}.tar.gz" compression="gzip">
+			<tarfileset dir="${src}" prefix="src"/>
+			<tarfileset dir="${dist}" prefix="dist"/>
+			<tarfileset dir="${doc}" prefix="doc"/>
+			<tarfileset dir="${lib}" prefix="lib"/>
+			<tarfileset dir="${test}" prefix="test"/>
+			<tarfileset dir="${examples}" prefix="examples"/>
+			<tarfileset dir="${targets}" prefix="targets"/>
+			<tarfileset dir="${resources}" prefix="resources"/>
+			<tarfileset dir="${basedir}">
+				<include name="build.xml"/>
+				<include name="README.txt"/>
+				<include name="LICENSE.txt"/>
+				<include name="TODO.txt"/>
+			</tarfileset>
+		</tar>
+	</target>
+	
+	<target name="examples" depends="dist" description="Create the example applications">
+		<javac srcdir="${examples}"
+		       destdir="${examples}"
+		       source="1.5"
+		       target="1.5"
+		       debug="on">
+			<classpath>
+				<pathelement location="${lib}/Jama-1.0.2.jar"/>
+				<pathelement location="${dist}/${project.name}.jar"/>
+			</classpath>
+		</javac>
+	</target>
+	
+	<target name="test" depends="compile" description="Compile and run JUnit tests">
+		<antcall target="test.init"/>
+		<antcall target="test.compile"/>
+		<antcall target="test.run"/>
+	</target>
+	
+	<target name="clean" description="Remove all output">
+		<antcall target="test.clean"/>
+		
+		<delete dir="${build}"/>
+		<delete dir="${dist}"/>
+		<delete dir="${javadoc}"/>
+		<delete dir="${doc}/html"/>
+	</target>
+		
+</project>
