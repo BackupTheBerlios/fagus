@@ -3,6 +3,7 @@ package apps;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
+import util.DefaultFeatureScaler;
 import util.FeatureScaler;
 import util.LibSVMVectorSetReader;
 import util.LibSVMVectorSetWriter;
@@ -62,7 +63,7 @@ public class Scale {
 			System.exit(1);
 		}
 		
-		FeatureScaler scaler = new FeatureScaler();
+		FeatureScaler scaler = new DefaultFeatureScaler(vectors);
 		scaler.scale(vectors, lower, upper);
 		
 		VectorSetWriter w = new LibSVMVectorSetWriter(args[argp++]);

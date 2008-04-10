@@ -6,7 +6,10 @@ import java.util.Map;
 import select.FeatureSelection;
 import util.ClassDescriptor;
 import util.VectorSet;
+import util.io.Export;
 import util.io.ExportVisitor;
+import util.io.Import;
+import util.io.ModelType;
 
 /**
  * This is an implementation of a Linear Discriminant Analysis (LDA).
@@ -74,7 +77,7 @@ public class LinearDiscriminantAnalysis implements FeatureSelection {
 		return y;
 	}
 	
-
+	@Export(ModelType.FEATURE_SELECTION)
 	public void export(ExportVisitor exporter) {
 		ExportVisitor.Parameters params = exporter.newParametersInstance();
 		
@@ -90,6 +93,7 @@ public class LinearDiscriminantAnalysis implements FeatureSelection {
 	 * @param params the map must at least contain the key "lda".
 	 * @return
 	 */
+	@Import(ModelType.FEATURE_SELECTION)
 	public static LinearDiscriminantAnalysis newInstance(Map<String, Object> params) {
 		LinearDiscriminantAnalysis lda = new LinearDiscriminantAnalysis();
 		

@@ -36,6 +36,7 @@ public class XMLModelParser extends DefaultHandler implements ModelParser {
 		PARAM, 
 		COMPLEX_PARAM, 
 		SELECTION,
+		SCALING,
 		CLASS,
 		MATRIX, 
 		MATRIX_ROW,
@@ -66,8 +67,10 @@ public class XMLModelParser extends DefaultHandler implements ModelParser {
 	private Map<ClassDescriptor, Map<String, Object>> classes = null;
 	private Map<String, Object> model = null;
 	private Map<String, Object> selection = null;
+	private Map<String, Object> scaling = null;
 	private String className = null;
 	private String selectionClassName = null;
+	private String scalingClassName = null;
 	
 	
 	public String getClassName() {
@@ -85,6 +88,16 @@ public class XMLModelParser extends DefaultHandler implements ModelParser {
 	}
 	
 	
+	public String getScalingClassName() {
+		return scalingClassName;
+	}
+	
+	
+	public boolean useScaling() {
+		return scaling != null;
+	}
+	
+	
 	public Map<ClassDescriptor, Map<String, Object>> getClassData() {
 		return classes;
 	}
@@ -97,6 +110,11 @@ public class XMLModelParser extends DefaultHandler implements ModelParser {
 	
 	public Map<String, Object> getSelectionData() {
 		return selection;
+	}
+	
+	
+	public Map<String, Object> getScalingData() {
+		return scaling;
 	}
 	
 	
@@ -175,6 +193,15 @@ public class XMLModelParser extends DefaultHandler implements ModelParser {
 			paramStack.push(new HashMap<String, Object>());
 			
 			selectionClassName = atts.getValue("class");
+			
+		} else if(name.equals("scaling")) {
+			/*
+			 * Holds scaling parameters.
+			 */
+			stateStack.push(ParserState.SCALING);
+			paramStack.push(new HashMap<String, Object>());
+			
+			scalingClassName = atts.getValue("class");
 			
 		} else if(name.equals("class")) {
 			/*
@@ -258,6 +285,10 @@ public class XMLModelParser extends DefaultHandler implements ModelParser {
 			
 		case SELECTION:
 			selection = paramStack.pop();
+			break;
+			
+		case SCALING:
+			scaling = paramStack.pop();
 			break;
 			
 		case COMPLEX_PARAM: 

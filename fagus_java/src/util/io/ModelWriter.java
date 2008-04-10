@@ -2,6 +2,9 @@ package util.io;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -12,6 +15,7 @@ import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 
 import select.FeatureSelection;
+import util.FeatureScaler;
 
 import classify.Classifier;
 
@@ -23,9 +27,10 @@ import classify.Classifier;
 public class ModelWriter {
 	private Classifier classifier;
 	private FeatureSelection selection = null;
+	private FeatureScaler scaler = null;
 	
 	/**
-	 * Set the classifier, which should be exported.
+	 * Set the classifier that should be exported.
 	 * 
 	 * @param classifier
 	 */
@@ -34,12 +39,21 @@ public class ModelWriter {
 	}
 	
 	/**
-	 * Add feature selection, which should be exported.
+	 * Add the feature selection that should be exported.
 	 * 
 	 * @param selection
 	 */
 	public void setSelection(FeatureSelection selection) {
 		this.selection = selection;
+	}
+	
+	/**
+	 * Add the feature scaler that should be exported.
+	 * 
+	 * @param scaler
+	 */
+	public void setScaling(FeatureScaler scaler) {
+		this.scaler = scaler;
 	}
 	
 	/**
@@ -51,10 +65,59 @@ public class ModelWriter {
 	public void write(String output) throws IOException {
 		XMLExportVisitor visitor = new XMLExportVisitor();
 		
-		classifier.export(visitor);
+		Method[] methods = classifier.getClass().getMethods();
+		for(int i = 0; i < methods.length; i++) {
+			Annotation a = methods[i].getAnnotation(Export.class);
+			
+			if(a != null && ((Export)a).value() == ModelType.CLASSIFIER) {
+				try {
+					methods[i].invoke(classifier, visitor);
+				} catch(IllegalAccessException e) {
+					throw new IOException("Cannot access export method of classifier: " + e.getMessage());
+				} catch(InvocationTargetException e) {
+					throw new IOException("Cannot invoke export method of classifier: " + e.getMessage());
+				}
+				
+				break;
+			}
+		}
 		
 		if(selection != null) {
-			selection.export(visitor);
+			methods = selection.getClass().getMethods();
+			for(int i = 0; i < methods.length; i++) {
+				Annotation a = methods[i].getAnnotation(Export.class);
+				
+				if(a != null && ((Export)a).value() == ModelType.FEATURE_SELECTION) {
+					try {
+						methods[i].invoke(selection, visitor);
+					} catch(IllegalAccessException e) {
+						throw new IOException("Cannot access export method of selection: " + e.getMessage());
+					} catch(InvocationTargetException e) {
+						throw new IOException("Cannot invoke export method of selection: " + e.getMessage());
+					}
+
+					break;
+				}
+			}
+		}
+		
+		if(scaler != null) {
+			methods = scaler.getClass().getMethods();
+			for(int i = 0; i < methods.length; i++) {
+				Annotation a = methods[i].getAnnotation(Export.class);
+				
+				if(a != null && ((Export)a).value() == ModelType.FEATURE_SCALING) {
+					try {
+						methods[i].invoke(scaler, visitor);
+					} catch(IllegalAccessException e) {
+						throw new IOException("Cannot access export method of selection: " + e.getMessage());
+					} catch(InvocationTargetException e) {
+						throw new IOException("Cannot invoke export method of selection: " + e.getMessage());
+					}
+
+					break;
+				}
+			}
 		}
 		
 		SAXSource source = new SAXSource(visitor, null);

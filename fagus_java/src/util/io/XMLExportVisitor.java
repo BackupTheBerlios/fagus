@@ -31,9 +31,11 @@ public class XMLExportVisitor implements ExportVisitor, XMLReader {
 	
 	private XMLModelParameters modelParams;
 	private XMLModelParameters selectionParams = null;
+	private XMLModelParameters scalingParams = null;
 	private Map<String, XMLModelParameters> classes;
 	private String modelClass;
 	private String selectionClass = null;
+	private String scalingClass = null;
 	
 	
 	public XMLExportVisitor() {
@@ -56,6 +58,11 @@ public class XMLExportVisitor implements ExportVisitor, XMLReader {
 	public void setSelection(String className, Parameters params) {
 		selectionClass = className;
 		selectionParams = (XMLModelParameters)params;
+	}
+
+	public void setScaling(String className, Parameters params) {
+		scalingClass = className;
+		scalingParams = (XMLModelParameters)params;
 	}
 
 	public ContentHandler getContentHandler() {
@@ -97,6 +104,16 @@ public class XMLExportVisitor implements ExportVisitor, XMLReader {
 			contentHandler.endElement(namespace, "selection", "selection");
 		}
 		
+		if(scalingClass != null) {
+			atts = new AttributesImpl();
+			atts.addAttribute(namespace, "class", "class", "string", scalingClass);
+			contentHandler.startElement(namespace, "scaling", "scaling", atts);
+			
+			scalingParams.parse();
+			
+			contentHandler.endElement(namespace, "scaling", "scaling");
+		}
+
 		for(String cl: classes.keySet()) {
 			atts = new AttributesImpl();
 			atts.addAttribute(namespace, "label", "label", "string", cl);

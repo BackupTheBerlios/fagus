@@ -129,5 +129,8 @@ public abstract class BayesClassifier implements Classifier {
 	public void clearTrainingData() {
 		distributions.clear();
 	}
-		
+	
+	public boolean suggestsScaling() {
+		return false;
+	}
 }

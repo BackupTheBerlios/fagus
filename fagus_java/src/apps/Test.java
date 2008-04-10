@@ -6,7 +6,9 @@ import reporting.ClassificationLogger;
 import reporting.ConfusionMatrixReporter;
 import reporting.Reporter;
 import reporting.TotalErrorReporter;
+import select.FeatureSelection;
 
+import util.FeatureScaler;
 import util.LibSVMVectorSetReader;
 import util.VectorSet;
 import util.VectorSetReader;
@@ -68,7 +70,14 @@ public class Test {
 		validator.setLogger(logger);
 		
 		if(r.needsSelection()) {
-			validator.setFeatureSelection(r.getSelection());
+			FeatureSelection selection = r.getSelection();
+			selection.initialize(testData);
+			testData = selection.getMappedData();
+		}
+		
+		if(r.needsScaling()) {
+			FeatureScaler scaling = r.getScaling();
+			scaling.scale(testData, -1.0, 1.0);
 		}
 		
 		validator.validate(testData);

@@ -28,6 +28,15 @@ public interface ExportVisitor {
 	void setSelection(String className, Parameters params);
 	
 	/**
+	 * Set the feature scaling class and its parameters.
+	 * 
+	 * @param className the name of the Java class of the
+	 *                  feature scaling implementation.
+	 * @param params the parameters for the feature scaling.
+	 */
+	void setScaling(String className, Parameters params);
+	
+	/**
 	 * Add a class to the model.
 	 * 
 	 * @param label a unique (string) identifier for the class.

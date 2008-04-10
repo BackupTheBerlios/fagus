@@ -10,7 +10,9 @@ import libsvm.svm_parameter;
 import libsvm.svm_problem;
 import util.ClassDescriptor;
 import util.VectorSet;
+import util.io.Export;
 import util.io.ExportVisitor;
+import util.io.ModelType;
 import classify.Classifier;
 
 /**
@@ -76,6 +78,10 @@ public class SupportVectorClassifier implements Classifier {
 	
 	public void clearTrainingData() {
 	}
+	
+	public boolean suggestsScaling() {
+		return true;
+	}
 
 	
 	public void train(VectorSet trainingSet) {
@@ -119,6 +125,7 @@ public class SupportVectorClassifier implements Classifier {
 	}
 	
 	
+	@Export(ModelType.CLASSIFIER)
 	public void export(ExportVisitor visitor) {
 		ExportVisitor.Parameters params = visitor.newParametersInstance();
 		params.setParameter("c", Double.toString(param.C));

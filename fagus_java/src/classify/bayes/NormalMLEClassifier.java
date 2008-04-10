@@ -9,7 +9,10 @@ import math.statistics.MultivariateNormalDistribution;
 import math.statistics.SmallSampleSizeNormalDistribution;
 
 import util.ClassDescriptor;
+import util.io.Export;
 import util.io.ExportVisitor;
+import util.io.Import;
+import util.io.ModelType;
 
 /**
  * This classifier is a very basic type of a Bayesian classifier.
@@ -33,7 +36,7 @@ public class NormalMLEClassifier extends BayesClassifier {
 	 * @param dimension A training vector's dimension.
 	 */
 	@Override
-	public void doTrain(Map<ClassDescriptor, List<double[]>> data, int dimension) {
+	protected void doTrain(Map<ClassDescriptor, List<double[]>> data, int dimension) {
 		this.dimension = dimension;
 
 		for(ClassDescriptor d: data.keySet()) {
@@ -56,6 +59,7 @@ public class NormalMLEClassifier extends BayesClassifier {
 		}
 	}
 	
+	@Export(ModelType.CLASSIFIER)
 	public void export(ExportVisitor visitor) {
 		/*
 		 * Export the a-priori probabilities, the mean vectors, and
@@ -87,6 +91,7 @@ public class NormalMLEClassifier extends BayesClassifier {
 	 * @param classes each class must at least contain the mean vector and covariance matrix.
 	 * @return a quadratic Bayes classifier.
 	 */
+	@Import(ModelType.CLASSIFIER)
 	public static BayesClassifier newInstance(Map<String, Object> model, Map<ClassDescriptor, Map<String, Object>> classes) {
 		BayesClassifier classifier = new NormalMLEClassifier();
 		

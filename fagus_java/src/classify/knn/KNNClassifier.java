@@ -9,7 +9,10 @@ import java.util.TreeMap;
 
 import util.ClassDescriptor;
 import util.VectorSet;
+import util.io.Export;
 import util.io.ExportVisitor;
+import util.io.Import;
+import util.io.ModelType;
 import classify.Classifier;
 
 /**
@@ -115,7 +118,11 @@ public class KNNClassifier implements Classifier {
 		this.trainingData = null;
 	}
 	
-
+	public boolean suggestsScaling() {
+		return true;
+	}
+	
+	@Export(ModelType.CLASSIFIER)
 	public void export(ExportVisitor visitor) {
 		ExportVisitor.Parameters params = visitor.newParametersInstance();
 		params.setParameter("k", Integer.toString(k));
@@ -143,6 +150,7 @@ public class KNNClassifier implements Classifier {
 	 * @param classes the class parameters.
 	 * @return
 	 */
+	@Import(ModelType.CLASSIFIER)
 	public static KNNClassifier newInstance(Map<String, Object> model, Map<ClassDescriptor, Map<String, Object>> classes) {
 		KNNClassifier classifier;
 		int k = Integer.parseInt((String)model.get("k"));

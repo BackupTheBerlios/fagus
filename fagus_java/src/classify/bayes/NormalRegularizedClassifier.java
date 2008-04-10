@@ -9,7 +9,10 @@ import math.statistics.MultivariateDistribution;
 import math.statistics.MultivariateNormalDistribution;
 
 import util.ClassDescriptor;
+import util.io.Export;
 import util.io.ExportVisitor;
+import util.io.Import;
+import util.io.ModelType;
 
 /**
  * This class provides an extension to a quadratic and linear Bayes
@@ -63,10 +66,13 @@ public class NormalRegularizedClassifier extends BayesClassifier {
 		}
 	}
 
+	@Export(ModelType.CLASSIFIER)
 	public void export(ExportVisitor visitor) {
 		/*
 		 * Export the a-priori probabilities, the mean vectors, and
-		 * the covariance matrices as class specific parameters.
+		 * the covariance matrices as class specific parameters. There
+		 * is no need to export the regularization parameter since it
+		 * is only used during the training phase.
 		 */
 		ExportVisitor.Parameters params = visitor.newParametersInstance();
 		
@@ -94,7 +100,14 @@ public class NormalRegularizedClassifier extends BayesClassifier {
 	 * @param classes each class must at least contain the mean vector and covariance matrix.
 	 * @return a quadratic Bayes classifier.
 	 */
+	@Import(ModelType.CLASSIFIER)
 	public static BayesClassifier newInstance(Map<String, Object> model, Map<ClassDescriptor, Map<String, Object>> classes) {
+		/*
+		 * We do not instanciate a regularized classifier here, but a
+		 * quadratic one. The regularization parameter is not used
+		 * in the testing phase and the covariance matrices have been
+		 * regularized before exporting the model file.
+		 */
 		BayesClassifier classifier = new NormalMLEClassifier();
 		
 		for(ClassDescriptor c: classes.keySet()) {

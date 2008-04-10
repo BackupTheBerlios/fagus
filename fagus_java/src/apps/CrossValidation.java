@@ -34,10 +34,12 @@ public class CrossValidation {
 		System.err.println("Usage: java apps.CrossValidation [-lda n] CLASSIFIER [OPTIONS] INPUT_FILE");
 		System.err.println("Where LDA is used to reduce the dimension of the input data to n features\n");
 		System.err.println("Classifiers and options: ");
-		System.err.println("    knn [k]         : k-NN classifier with k neighbors");
-		System.err.println("    parzen [r]      : Parzen Window classifier with radius r");
-		System.err.println("    bayes [-linear] : Bayes classifier, either linear or quadratic");
-		System.err.println("    svm [c gamma]   : Support-Vector-Machine with parameters c and gamma");
+		System.err.println("    knn [k]               : k-NN classifier with k neighbors");
+		System.err.println("    parzen [r]            : Parzen Window classifier with radius r");
+		System.err.println("    bayes [-linear] | \n" +
+				           "      [-regularize alpha] : Bayes classifier, either quadratic (default),\n" +
+				           "                            linear, or regularized");
+		System.err.println("    svm [c gamma]         : Support-Vector-Machine with parameters c and gamma");
 	}
 
 

@@ -36,6 +36,21 @@ public interface ModelParser {
 	boolean useSelection();
 	
 	/**
+	 * Get the class name of the scaling algorithm.
+	 * 
+	 * @return the full class name (including packages), or null
+	 * if no scaling is used.
+	 */
+	String getScalingClassName();
+	
+	/**
+	 * Is a feature scaling algorithm used?
+	 * 
+	 * @return
+	 */
+	boolean useScaling();
+	
+	/**
 	 * Get a map of class descriptors and class properties. The
 	 * content of the properties depends on the classifier
 	 * architecture.
@@ -57,6 +72,13 @@ public interface ModelParser {
 	 * @return
 	 */
 	Map<String, Object> getSelectionData();
+	
+	/**
+	 * Get the scaling properties (if any scaling is used).
+	 * 
+	 * @return
+	 */
+	Map<String, Object> getScalingData();
 	
 	/**
 	 * Parse input data.

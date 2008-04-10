@@ -9,7 +9,10 @@ import math.statistics.MaximumLikelihoodEstimation;
 import math.statistics.MultivariateNormalDistribution;
 
 import util.ClassDescriptor;
+import util.io.Export;
 import util.io.ExportVisitor;
+import util.io.Import;
+import util.io.ModelType;
 
 /**
  * This is a simple bayesian classifier for gaussian data, that is
@@ -29,7 +32,7 @@ public class NormalLinearClassifier extends BayesClassifier {
 	 * @param dimension A training vector's dimension.
 	 */
 	@Override
-	public void doTrain(Map<ClassDescriptor, List<double[]>> data, int dimension) {
+	protected void doTrain(Map<ClassDescriptor, List<double[]>> data, int dimension) {
 		this.dimension = dimension;
 		Map<ClassDescriptor, double[]> means = new HashMap<ClassDescriptor, double[]>();
 
@@ -68,6 +71,7 @@ public class NormalLinearClassifier extends BayesClassifier {
 	}
 
 	
+	@Export(ModelType.CLASSIFIER)
 	public void export(ExportVisitor visitor) {
 		/*
 		 * The covariance matrix is exported as a model parameter,
@@ -110,6 +114,7 @@ public class NormalLinearClassifier extends BayesClassifier {
 	 * @param classes each class must contain its mean vector.
 	 * @return a linear Bayes classifier.
 	 */
+	@Import(ModelType.CLASSIFIER)
 	public static BayesClassifier newInstance(Map<String, Object> model, Map<ClassDescriptor, Map<String, Object>> classes) {
 		BayesClassifier classifier = new NormalMLEClassifier();
 		double[][] cov = (double[][])model.get("covariance");

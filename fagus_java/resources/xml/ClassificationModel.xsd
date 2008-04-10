@@ -18,7 +18,8 @@
 			<xsd:sequence>
 				<xsd:element ref="param" minOccurs="0" maxOccurs="unbounded"/>
 				<xsd:element ref="complexParam" minOccurs="0" maxOccurs="unbounded"/>
-				<xsd:element ref="selection" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="selection" minOccurs="0" maxOccurs="1"/>
+				<xsd:element ref="scaling" minOccurs="0" maxOccurs="1"/>
 				<xsd:element ref="class" minOccurs="2" maxOccurs="unbounded"/>
 			</xsd:sequence>
 			<xsd:attribute name="class" type="xsd:string" use="required"/>
@@ -27,6 +28,16 @@
 	
 	
 	<xsd:element name="selection">
+		<xsd:complexType>
+			<xsd:sequence>
+				<xsd:element ref="param" minOccurs="0" maxOccurs="unbounded"/>
+				<xsd:element ref="complexParam" minOccurs="0" maxOccurs="unbounded"/>				
+			</xsd:sequence>
+			<xsd:attribute name="class" type="xsd:string" use="required"/>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:element name="scaling">
 		<xsd:complexType>
 			<xsd:sequence>
 				<xsd:element ref="param" minOccurs="0" maxOccurs="unbounded"/>

@@ -7,7 +7,10 @@ import java.util.Map;
 import math.statistics.MaximumLikelihoodEstimation;
 
 import util.ClassDescriptor;
+import util.io.Export;
 import util.io.ExportVisitor;
+import util.io.Import;
+import util.io.ModelType;
 import classify.bayes.BayesClassifier;
 
 /**
@@ -65,7 +68,27 @@ public class ParzenWindowClassifier extends BayesClassifier {
 		this.type = kernel;
 	}
 	
+	@Override
+	protected void doTrain(Map<ClassDescriptor, List<double[]>> data,
+			int dimension) {
+		
+		this.dimension = dimension;
+		
+		for(ClassDescriptor c: data.keySet()) {
+			/*
+			 * Estimate covariance using ML.
+			 */
+			double[] mean = MaximumLikelihoodEstimation.getMean(data.get(c), dimension);
+			double[][] cov = MaximumLikelihoodEstimation.getCovariance(data.get(c), mean);
 
+			Kernel kernel = type.getKernel(cov, radius);
+			
+			distributions.put(c, new ParzenDistribution(kernel, data.get(c)));
+		}
+	}
+
+	
+	@Export(ModelType.CLASSIFIER)
 	public void export(ExportVisitor visitor) {
 		ExportVisitor.Parameters params = visitor.newParametersInstance();
 		params.setParameter("radius", Double.toString(radius));
@@ -109,6 +132,7 @@ public class ParzenWindowClassifier extends BayesClassifier {
 	 * @param classes
 	 * @return
 	 */
+	@Import(ModelType.CLASSIFIER)
 	public static ParzenWindowClassifier newInstance(Map<String, Object> model, 
 			Map<ClassDescriptor, Map<String, Object>> classes) {
 		
@@ -147,23 +171,4 @@ public class ParzenWindowClassifier extends BayesClassifier {
 	}
 
 	
-	@Override
-	protected void doTrain(Map<ClassDescriptor, List<double[]>> data,
-			int dimension) {
-		
-		this.dimension = dimension;
-		
-		for(ClassDescriptor c: data.keySet()) {
-			/*
-			 * Estimate covariance using ML.
-			 */
-			double[] mean = MaximumLikelihoodEstimation.getMean(data.get(c), dimension);
-			double[][] cov = MaximumLikelihoodEstimation.getCovariance(data.get(c), mean);
-
-			Kernel kernel = type.getKernel(cov, radius);
-			
-			distributions.put(c, new ParzenDistribution(kernel, data.get(c)));
-		}
-	}
-
 }

@@ -2,7 +2,6 @@ package classify;
 
 import util.ClassDescriptor;
 import util.VectorSet;
-import util.io.ExportVisitor;
 
 /**
  * This provides an interface for classification algorithms. Each
@@ -33,8 +32,9 @@ public interface Classifier {
 	void clearTrainingData();
 	
 	/**
-	 * Export (Serialize) a classifier.
-	 * @param visitor
+	 * Provide some information on whether feature scaling
+	 * is recommendet as a preprocessing step.
+	 * @return True, if feature scaling is suggested.
 	 */
-	void export(ExportVisitor visitor);
+	boolean suggestsScaling();
 }

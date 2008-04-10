@@ -69,9 +69,14 @@
 			<!--
 				FIXME: For some reason, the JDK 5.0 default transformer factory does
 				       not work. According to the release notes, it is based on 
-				       XSLTC of Xalan 2.6 . Xalan 2.7.0, however, does work.
+				       XSLTC of Xalan 2.6 . Xalan 2.7 and Saxon 6, however, do work.
+				       You should not need to uncomment the lines below, just make 
+				       sure that either of the libraries is on the $CLASSPATH. When 
+				       using Saxon 6, be aware that the output is written to ${basedir} 
+				       instead of ${doc}/html.
 			-->
-			<factory name="org.apache.xalan.processor.TransformerFactoryImpl"/>
+			<!--factory name="org.apache.xalan.processor.TransformerFactoryImpl"/-->
+			<!--factory name="com.icl.saxon.TransformerFactoryImpl"/-->
 			<outputproperty name="method" value="xml"/>
 			<outputproperty name="standalone" value="yes"/>
 			<outputproperty name="indent" value="no"/>

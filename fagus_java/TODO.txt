@@ -4,8 +4,6 @@ Classification:
 - Rewrite the Parzen classifier from scratch. Look up some good source
   to get rid of this covariance estimation.
 
-- Add feature scaling to the XML model structure.
-
 
 Feature Selection:
 ==================
@@ -34,12 +32,6 @@ Design Issues:
   parameters for classifiers. Classifiers might require other parameters 
   than doubles, vectors, or matrices. Maybe create an interface
   'Parameterizable'.
-
-- Create an interface 'Exportable' and/or 'XMLExportable' that takes out
-  the 'export()' method from the 'Classifier' interface. Maybe this can
-  be solved by writing some Java5 annotations @Export and @Import that
-  completely abstracts the IO from the feature selection and classification
-  interfaces (see for instance the @Test annotation in JUnit 4). 
 
 - Allow sparse LibSVM files. If indices are omitted, there value migth be
   assumed to be 0.0.

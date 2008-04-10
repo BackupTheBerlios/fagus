@@ -6,7 +6,10 @@ import java.util.Map;
 import select.FeatureSelection;
 import util.ClassDescriptor;
 import util.VectorSet;
+import util.io.Export;
 import util.io.ExportVisitor;
+import util.io.Import;
+import util.io.ModelType;
 
 /**
  * This class is used to integrate feature subset selection with
@@ -78,6 +81,7 @@ public class FeatureSubsetSelection implements FeatureSelection {
 		return result;
 	}
 	
+	@Export(ModelType.FEATURE_SELECTION)
 	public void export(ExportVisitor exporter) {
 		ExportVisitor.Parameters params = exporter.newParametersInstance();
 		params.setParameter("subset", indices);
@@ -91,6 +95,7 @@ public class FeatureSubsetSelection implements FeatureSelection {
 	 * @param params
 	 * @return
 	 */
+	@Import(ModelType.FEATURE_SELECTION)
 	public static FeatureSubsetSelection newInstance(Map<String, Object> params) {
 		int[] indices = (int[])params.get("subset");
 		

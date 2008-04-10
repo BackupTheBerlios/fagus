@@ -1,7 +1,6 @@
 package select;
 
 import util.VectorSet;
-import util.io.ExportVisitor;
 
 /**
  * This is the common interface of all feature selection 
@@ -33,12 +32,5 @@ public interface FeatureSelection {
 	 * @return the mapped vector (with lower dimension).
 	 */
 	double[] mapVector(double[] original);
-	
-	/**
-	 * Export (i.e. serialize) this feature selection system.
-	 * 
-	 * @param exporter
-	 */
-	void export(ExportVisitor exporter);
 	
 }
