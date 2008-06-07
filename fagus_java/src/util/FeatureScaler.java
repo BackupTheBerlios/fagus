@@ -16,4 +16,14 @@ public interface FeatureScaler {
 	 * @param upper The upper scaling bound.
 	 */
 	void scale(VectorSet vectors, double lower, double upper);
+
+	/**
+	 * Scale a single vector to the interval [lower, upper]
+	 * 
+	 * @param vector The vector to scale. This vector is 
+	 *        modified by the scale method.
+	 * @param lower The lower scaling bound.
+	 * @param upper The upper scaling bound.
+	 */
+	void scale(double[] vector, double lower, double upper);
 }

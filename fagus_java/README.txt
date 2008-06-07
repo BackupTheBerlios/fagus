@@ -28,6 +28,27 @@ both, the classifier and the feature selector.
 To be able to run the tools, add the jar files in the directories "dist/" and
 "lib/" to your classpath.
 
+To build the documentation you should install Docbook (http://www.docbook.org)
+and Apache Xalan (http://xml.apache.org). Add the file xalan.jar to your
+CLASSPATH. The ant file assumes that Docbook is installed in
+
+/usr/share/xml/docbook/
+
+which is the default location on Debian systems. You may adapt the build.xml
+file if you use a different location. Now you can run
+
+$ ant docs
+
+to build the html documentation. This will be written to the doc/html 
+directory. (You can also use Saxon6, however the output will be written
+to the base directory instead).
+
+The JavaDoc documentation is simply built using
+
+$ ant javadoc
+
+using the standard Java developement kit.
+
 
 Classification Library:
 -----------------------

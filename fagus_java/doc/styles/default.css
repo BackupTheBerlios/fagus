@@ -23,19 +23,19 @@ dl {
 	}
 	
 	h2.title {
-		margin-top: 0.5em;
+		margin-top: 1.5em;
 		border: 1px solid gray;
 		padding: 0.5em;
 		font-size: 125%;
 	}
 	
 	h3.title {
-		margin-top: 0.5em;
+		margin-top: 1.5em;
 		border: 1px solid gray;
-		padding: 0.1em;
+		padding: 0.25em;
 		font-size: 110%;
 	}
-
+	
 	span.title, p.title {
 		background-color: #ffffff;
 		padding: 0px;

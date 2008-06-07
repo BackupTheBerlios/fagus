@@ -80,8 +80,6 @@ public class GreedySelection {
 			}
 		}
 		
-		System.out.println(worstIndex + "(" + all[worstIndex] + "): " + worst);
-
 		return new IndexValue(worst, new Integer(all[worstIndex]));
 	}
 	

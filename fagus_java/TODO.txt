@@ -4,6 +4,10 @@ Classification:
 - Rewrite the Parzen classifier from scratch. Look up some good source
   to get rid of this covariance estimation.
 
+Scaling:
+========
+
+- Include interval in feature scaling model.
 
 Feature Selection:
 ==================

@@ -26,8 +26,19 @@ public class DefaultFeatureSpace implements CloneableFeatureSpace {
 	}
 	
 	
-	public DefaultFeatureSpace() {
+	/**
+	 * Create a new feature space that initially contains
+	 * a given number of features (from 0 to nfeatures - 1).
+	 * 
+	 * @param nfeatures The number of features that should
+	 *        be present after initilization.
+	 */
+	public DefaultFeatureSpace(int nfeatures) {
 		this.features = new LinkedList<Integer>();
+		
+		for(int i = 0; i < nfeatures; i++) {
+			features.add(i);
+		}
 	}
 	
 	public void update(Observable o, Object arg) {

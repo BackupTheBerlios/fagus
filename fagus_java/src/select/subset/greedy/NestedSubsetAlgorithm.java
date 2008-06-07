@@ -76,7 +76,7 @@ public abstract class NestedSubsetAlgorithm extends Observable implements
 		}
 		
 		if(featureSpace == null) {
-			setFeatureSpace(createDefaultFeatureSpace());
+			setFeatureSpace(createDefaultFeatureSpace(vectors.getDimension()));
 		}
 		
 		doRun(f, featureSpace, n, targetSize);
@@ -131,8 +131,8 @@ public abstract class NestedSubsetAlgorithm extends Observable implements
 		notifyObservers(new Operation(true, feature));
 	}
 
-	protected FeatureSpace createDefaultFeatureSpace() {
-		return new DefaultFeatureSpace();
+	protected FeatureSpace createDefaultFeatureSpace(int nfeatures) {
+		return new DefaultFeatureSpace(nfeatures);
 	}
 	
 	/**

@@ -21,6 +21,12 @@
 				<authorinitials>LB</authorinitials>
 				<revremark>Initial version</revremark>
 			</revision>
+			<revision>
+				<revnumber>0.2</revnumber>
+				<date>28 May 2008</date>
+				<authorinitials>LB</authorinitials>
+				<revremark>Import/Export system</revremark>
+			</revision>
 		</revhistory>
 	</bookinfo>
 	
@@ -602,6 +608,46 @@ System.out.println("Result: " + result.toString());
 			</example>
 
 			<para>
+			Some classifiers will perform well when invoked in the above way. However,
+			some classifiers will fail for certain input data. This group of classifiers
+			relies on scaled features. Scaling means that every single feature is in
+			some interval - [0,1], for instance. Usually, classifiers that use the 
+			Euclidian distance fall into this category. The k-NN and SVM classifiers are 
+			exmples thereof. If features are not scaled, some of the features will 
+			outperform the others. You should therefore seriously consider modifying
+			<xref linkend="ex:prog_classifier"/> to deal with this problem. A complete
+			Code example is given in <xref linkend="ex:prog_classifier_scaling"/>.
+			</para>
+
+			<example id="ex:prog_classifier_scaling">
+				<title>Training and invoking a classifier with scaling.</title>
+				<programlisting><![CDATA[
+String path = "trainingData.libsvm";
+double[] unknownVector = {0.01, -0.075, 1.72e-4};
+
+VectorSet trainingData = null;
+try {
+	trainingData = (new LibSVMVectorSetReader(path)).parse();
+} catch(IOException e) {
+	System.err.println("Cannot read training data: " + e.getMessage());
+	System.exit(1); 
+}
+
+Classifier classifier = new NormalLinearClassifier();
+
+if(classifier.suggestsScaling()) {
+	scaling = new DefaultFeatureScaler(trainingData);
+	scaling.scale(trainingData, -1.0, 1.0);
+	scaling.scale(unknownVector, -1.0, 1.0);
+}
+classifier.train(trainingData);
+
+ClassDescriptor result = classifier.classify(unknownVector);
+System.out.println("Result: " + result.toString());
+				]]></programlisting>
+			</example>
+
+			<para>
 			A different approach is to train a classifier using the
 			<command>apps.Train</command> tool (see <xref linkend="sect:tools_train"/>)
 			as a preprocessing step. To classify the unknown vector, the model
@@ -632,6 +678,13 @@ if(r.needsSelection()) {
 	// the model has been trained using some feature selection algorithm
 	Selection selection = r.getSelection();
 	unknownVector = selection.mapVector(unknownVector);
+}
+		
+if(r.needsScaling()) {
+	// the model has been trained using some feature scaling algorithm
+	FeatureScaler scaling = r.getScaling();
+	// it is suggested to use the same interval as in the training process
+	scaling.scale(unknownVector, -1.0, 1.0);
 }
 
 ClassDescriptor result = classifier.classify(unknownVector);
@@ -1155,7 +1208,8 @@ try {
 		<title>Implementation Details</title>
 		
 		<para>
-		TODO
+		This chapter is devoted to certain software engineering aspects, 
+		that are worth being pointing out.
 		</para>
 		
 		
@@ -1171,8 +1225,9 @@ try {
 			tree structure. The actual content of the resulting file depends 
 			on the type of classifier, which is why the grammar is quite 
 			simple and general. As can be seen in <xref linkend="ex:xml"/>, 
-			the model consists of an optional <varname>selection</varname> 
-			section and one section for each class of patterns.
+			the model consists of optional <varname>selection</varname> and 
+			<varname>scaling</varname> sections and one section for each class of 
+			patterns.
 			</para>
 
 			<example id="ex:xml">
@@ -1185,7 +1240,7 @@ try {
 	<selection class="select.extract.FisherLinearDiscriminantAnalysis">
 		<!-- selection-specific parameters -->
 	</selection>
-	
+
 	<class label="class1">
 		<!-- class-specific parameters -->
 	</class>
@@ -1195,6 +1250,15 @@ try {
 	</class>
 </model>]]></programlisting>
 			</example>
+			
+			<para>
+			The above example is a model for a two-classes classification
+			problem with a feature extraction step as a preprocessing. Feature
+			scaling is not included in this model. For a Bayes classifier, 
+			scaling does usually not improve results. You should, however, 
+			seriously consider feature scaling when using a k-NN classifier or
+			a support vector machine.
+			</para>
 			
 			<para>
 			In addition to this basic structural tags, the grammar allows 
@@ -1285,17 +1349,33 @@ try {
 				<title>Import of Models</title>
 				
 				<para>
+				The actual import is handled by <classname>util.io.ModelReader</classname>.
+				This class uses some input file parse, depending on the type of
+				input. In the current implementation only XML is supported. Therefore,
+				<classname>ModelReader</classname> will instanciate 
+				<classname>util.io.XMLModelParser</classname>. This parser uses the
+				<ulink url="http://www.saxproject.org/">SAX2</ulink> API.
+				</para>
+				
+				<para>
 				An important detail in the above examples is the 
 				<parameter>class</parameter> attribute to the 
-				<varname>model</varname> and <varname>selection</varname> tags.
+				<varname>model</varname>, <varname>selection</varname> and 
+				<varname>scaling</varname> tags.
 				This parameter allows an easy construction of a classifier by
 				using the Java reflection system. Upon parsing a model, the 
-				Java classes defined in these attributes are loaded and a 
-				method named <methodname>newInstance</methodname> is invoked.
-				This method gets handed over the contents of the 
+				Java class defined in such an attribute is loaded.
+				</para>
+				
+				<para>
+				After loading the corresponding class, the import system 
+				searches for a method that has an annotation 
+				<interfacename>util.io.Import</interfacename> and tries to invoke
+				it. This method gets handed over the contents of the 
 				<varname>param</varname> and <varname>complexParam</varname>
-				tags and attempts to construct an instance of a classifier
-				(or feature selection procedure). See also <xref linkend="ex:prog_classifier_model"/>.
+				tags and attempts to construct an instance of a classifier,
+				feature selection, or scaling procedure. See also 
+				<xref linkend="ex:prog_classifier_model"/>.
 				</para>
 			</sect2>
 
@@ -1304,9 +1384,82 @@ try {
 				<title>Export of Models</title>
 				
 				<para>
-				TODO
+				The export procedure is - just like the import - currently
+				only avaliable for an XML-based format. Serialization is, again,
+				implemented using the SAX API.
+				</para>
+				
+				<para>
+				The basic work is done by <classname>util.io.ModelWriter</classname>,
+				which uses an <interfacename>util.io.ExportVisitor</interfacename> to collect
+				all the data from the classifier, feature selection, and feature 
+				scaling algorithm. Currently, only the 
+				<classname>util.io.XMLExportVisitor</classname> is supported. The 
+				<classname>ModelWriter</classname> searches the classifier, feature
+				selection and scaling instances for a method annotated with
+				<interfacename>util.io.Import</interfacename>. This method
+				is then invoked using the <classname>ExportVisitor</classname> as
+				a parameter. The classifier, feature selection, and scaling algorithms are
+				then allowed to export strings, real or integer vectors, and real matrices.
 				</para>
 			</sect2>
+
+			<para>
+			In <xref linkend="ex:io_java"/>, we give a small example of the Import and
+			Export facilities. This example is taken from the classifier
+			implementation <classname>classify.bayes.NormalLinearClassifier</classname>.
+			</para>
+
+			<example id="ex:io_java">
+				<title>Example Java code for an import and export method of a linear Bayes classifier.</title>
+				<programlisting><![CDATA[
+@Import(ModelType.CLASSIFIER)
+public static BayesClassifier newInstance(Map<String, Object> model, Map<ClassDescriptor, Map<String, Object>> classes) {
+	BayesClassifier classifier = new NormalMLEClassifier();
+	double[][] cov = (double[][])model.get("covariance");
+
+	for(ClassDescriptor c: classes.keySet()) {
+		double[] mean = (double[])classes.get(c).get("mean");
+		Double prior = new Double((String)classes.get(c).get("prior"));
+
+		MultivariateDistribution d = new MultivariateNormalDistribution(mean, cov);
+		classifier.distributions.put(c, d);
+		classifier.priors.put(c, prior);
+	}
+
+	return classifier;
+}
+
+@Export(ModelType.CLASSIFIER)
+public void export(ExportVisitor visitor) {
+	ExportVisitor.Parameters params;
+
+	double[][] covariance = null;
+
+	for(ClassDescriptor c: distributions.keySet()) {
+		MultivariateNormalDistribution dist = (MultivariateNormalDistribution)distributions.get(c);
+
+		if(covariance == null) {
+			covariance = dist.getCovariance();
+		}
+
+		params = visitor.newParametersInstance();
+		params.setParameter("prior", Double.toString(priors.get(c)));
+		params.setParameter("mean", dist.getMean());
+
+		visitor.addClass(c.toString(), params);
+	}		
+
+	params = visitor.newParametersInstance();
+
+	params.setParameter("type", "Bayes Linear MLE");
+	params.setParameter("dimension", Integer.toString(dimension));
+	params.setParameter("covariance", covariance);
+
+	visitor.setModel(this.getClass().getName(), params);
+
+}]]></programlisting>
+			</example>
 		</sect1>
 	</chapter>
 	

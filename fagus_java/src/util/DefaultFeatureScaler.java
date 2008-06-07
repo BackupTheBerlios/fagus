@@ -41,40 +41,22 @@ public class DefaultFeatureScaler implements FeatureScaler {
 	}
 
 	public void scale(VectorSet vectors, double lower, double upper) {
-		double[] scales = new double[dimension];
-		double[] offsets = new double[dimension];
+		final double[] scales = getScales(lower, upper);
+		final double[] offsets = getOffsets(lower, upper);
 
-		/*
-		 * Suppose that our original interval of a feature is [a,b].
-		 * Then we can use the CDF of the uniform distribution to get
-		 * a mapping to [0,1]
-		 * 
-		 *   F(x) = (x - a) / (b - a)
-		 * 
-		 * We can now use the inverse CDF to get a mapping to some
-		 * interval [lower,upper]
-		 * 
-		 *   y = (upper - lower) * (x - a) / (b - a) + lower
-		 *     = x * (upper - lower) / (b - a) + (lower * b - upper * a) / (b - a)
-		 * 
-		 * For every feature two constants are introduced. The scale
-		 * is a constant to be multiplied with x.
-		 * 
-		 *   scale = (upper - lower) / (b - a)
-		 * 
-		 * The other parameter is an offset that is added to the result.
-		 * 
-		 *   offset = (lower * b - upper * a) / (b - a)
-		 */
-		for(int i = 0; i < dimension; i++) {
-			scales[i] = (upper - lower) / (extrema[i][1] - extrema[i][0]);
-			offsets[i] = (lower * extrema[i][1] - upper * extrema[i][0])/(extrema[i][1] - extrema[i][0]);
-		}
-		
 		for(double[] v: vectors.getData().keySet()) {
 			for(int i = 0; i < dimension; i++) {
 				v[i] = v[i] * scales[i] + offsets[i];
 			}
+		}
+	}
+	
+	public void scale(double[] vector, double lower, double upper) {
+		final double[] scales = getScales(lower, upper);
+		final double[] offsets = getOffsets(lower, upper);
+
+		for(int i = 0; i < dimension; i++) {
+			vector[i] = vector[i] * scales[i] + offsets[i];
 		}
 	}
 	
@@ -118,5 +100,46 @@ public class DefaultFeatureScaler implements FeatureScaler {
 		return result;
 	}
 	
+
+	/*
+	 * Suppose that our original interval of a feature is [a,b].
+	 * Then we can use the CDF of the uniform distribution to get
+	 * a mapping to [0,1]
+	 * 
+	 *   F(x) = (x - a) / (b - a)
+	 * 
+	 * We can now use the inverse CDF to get a mapping to some
+	 * interval [lower,upper]
+	 * 
+	 *   y = (upper - lower) * (x - a) / (b - a) + lower
+	 *     = x * (upper - lower) / (b - a) + (lower * b - upper * a) / (b - a)
+	 * 
+	 * For every feature two constants are introduced. The scale
+	 * is a constant to be multiplied with x.
+	 * 
+	 *   scale = (upper - lower) / (b - a)
+	 * 
+	 * The other parameter is an offset that is added to the result.
+	 * 
+	 *   offset = (lower * b - upper * a) / (b - a)
+	 */
+	private double[] getOffsets(double lower, double upper) {
+		double[] offsets = new double[dimension];
+		
+		for(int i = 0; i < dimension; i++) {
+			offsets[i] = (lower * extrema[i][1] - upper * extrema[i][0])/(extrema[i][1] - extrema[i][0]);
+		}
+		
+		return offsets;
+	}
 	
+	private double[] getScales(double lower, double upper) {
+		double[] scales = new double[dimension];
+
+		for(int i = 0; i < dimension; i++) {
+			scales[i] = (upper - lower) / (extrema[i][1] - extrema[i][0]);
+		}
+
+		return scales;
+	}
 }
