@@ -1,0 +1,1 @@
+* XML export does not work if Xalan 2.7 is set in the CLASSPATH variable.

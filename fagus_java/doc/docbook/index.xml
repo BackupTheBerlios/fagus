@@ -636,9 +636,9 @@ try {
 Classifier classifier = new NormalLinearClassifier();
 
 if(classifier.suggestsScaling()) {
-	scaling = new DefaultFeatureScaler(trainingData);
-	scaling.scale(trainingData, -1.0, 1.0);
-	scaling.scale(unknownVector, -1.0, 1.0);
+	scaling = new UniformFeatureScaler(trainingData, -1.0, 1.0);
+	scaling.scale(trainingData);
+	scaling.scale(unknownVector);
 }
 classifier.train(trainingData);
 
@@ -683,8 +683,7 @@ if(r.needsSelection()) {
 if(r.needsScaling()) {
 	// the model has been trained using some feature scaling algorithm
 	FeatureScaler scaling = r.getScaling();
-	// it is suggested to use the same interval as in the training process
-	scaling.scale(unknownVector, -1.0, 1.0);
+	scaling.scale(unknownVector);
 }
 
 ClassDescriptor result = classifier.classify(unknownVector);

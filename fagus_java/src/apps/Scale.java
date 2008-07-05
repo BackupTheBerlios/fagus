@@ -3,10 +3,10 @@ package apps;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
-import util.DefaultFeatureScaler;
 import util.FeatureScaler;
 import util.LibSVMVectorSetReader;
 import util.LibSVMVectorSetWriter;
+import util.UniformFeatureScaler;
 import util.VectorSet;
 import util.VectorSetReader;
 import util.VectorSetWriter;
@@ -63,8 +63,8 @@ public class Scale {
 			System.exit(1);
 		}
 		
-		FeatureScaler scaler = new DefaultFeatureScaler(vectors);
-		scaler.scale(vectors, lower, upper);
+		FeatureScaler scaler = new UniformFeatureScaler(vectors, lower, upper);
+		scaler.scale(vectors);
 		
 		VectorSetWriter w = new LibSVMVectorSetWriter(args[argp++]);
 		try {

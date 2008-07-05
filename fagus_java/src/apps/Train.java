@@ -4,9 +4,9 @@ import java.io.IOException;
 
 import select.FeatureSelection;
 import select.extract.ChernoffLinearDiscriminantAnalysis;
-import util.DefaultFeatureScaler;
 import util.FeatureScaler;
 import util.LibSVMVectorSetReader;
+import util.UniformFeatureScaler;
 import util.VectorSet;
 import util.VectorSetReader;
 import util.io.ModelWriter;
@@ -144,8 +144,8 @@ public class Train {
 		}
 
 		if(classifier.suggestsScaling()) {
-			scaling = new DefaultFeatureScaler(trainingData);
-			scaling.scale(trainingData, -1.0, 1.0);
+			scaling = new UniformFeatureScaler(trainingData, -1.0, 1.0);
+			scaling.scale(trainingData);
 		}
 		
 		classifier.train(trainingData);

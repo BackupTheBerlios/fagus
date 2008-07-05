@@ -4,10 +4,8 @@ Classification:
 - Rewrite the Parzen classifier from scratch. Look up some good source
   to get rid of this covariance estimation.
 
-Scaling:
-========
+- Add support for exporting and importing the SVM classifier.
 
-- Include interval in feature scaling model.
 
 Feature Selection:
 ==================
@@ -21,6 +19,10 @@ Feature Selection:
   whole matrix estimation for statistical distance measures. For huge
   subset sizes, the memory requirements will be enormous, since the 
   required space grows quadratic with the number of features.
+
+- Integrate FeatureSpace with all subset selection algrorithms:
+  ExhaustiveSearch, maybe BranchAndBound.
+
 
 Statistics:
 ===========

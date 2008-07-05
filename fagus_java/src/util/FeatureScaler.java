@@ -8,22 +8,18 @@ package util;
  */
 public interface FeatureScaler {
 	/**
-	 * Scale some vectors to the interval [lower, upper]
+	 * Scale some vectors.
 	 * 
 	 * @param vectors The vectors to scale. This vector set
 	 *        is modified by the scale method.
-	 * @param lower The lower scaling bound.
-	 * @param upper The upper scaling bound.
 	 */
-	void scale(VectorSet vectors, double lower, double upper);
+	void scale(VectorSet vectors);
 
 	/**
-	 * Scale a single vector to the interval [lower, upper]
+	 * Scale a single vector.
 	 * 
 	 * @param vector The vector to scale. This vector is 
 	 *        modified by the scale method.
-	 * @param lower The lower scaling bound.
-	 * @param upper The upper scaling bound.
 	 */
-	void scale(double[] vector, double lower, double upper);
+	void scale(double[] vector);
 }

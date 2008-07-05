@@ -77,7 +77,7 @@ public class Test {
 		
 		if(r.needsScaling()) {
 			FeatureScaler scaling = r.getScaling();
-			scaling.scale(testData, -1.0, 1.0);
+			scaling.scale(testData);
 		}
 		
 		validator.validate(testData);

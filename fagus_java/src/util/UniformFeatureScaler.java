@@ -8,72 +8,84 @@ import util.io.Import;
 import util.io.ModelType;
 
 /**
- * This class provides basic scaling for feature vectors. All 
- * features are scaled to some user-defined interval. 
+ * This class is the most basic feature scaling algorithm. It
+ * scales all features uniformly to some given interval. Usually,
+ * this is [0,1] or [-1, 1].
  * 
  * @author Leonhard Brunauer &lt;lbrunau@cosy.sbg.ac.at&gt;
  */
-public class DefaultFeatureScaler implements FeatureScaler {
+public class UniformFeatureScaler implements FeatureScaler {
 	private final int dimension;
-	private final double[][] extrema;
+	private final double[] offsets;
+	private final double[] scales;
 	
-	/**
-	 * Create a new FeatureScaler using some predefined
-	 * extrema (lower and upper bound) for each feature.
-	 * 
-	 * @param extrema A matrix of the extrema (lower and
-	 *        upper bound) for each dimension.
+	/*
+	 * This constructor is supposed to be used by the import
+	 * function below.
 	 */
-	public DefaultFeatureScaler(double[][] extrema) {
-		this.dimension = extrema.length;
-		this.extrema = extrema;
+	private UniformFeatureScaler(double[] scales, double[] offsets) {
+		assert(scales.length == offsets.length);
+		
+		this.dimension = scales.length;
+		this.scales = scales;
+		this.offsets = offsets;
 	}
 	
 	/**
-	 * Create a new FeatureScaler using some vector set
-	 * to determine the extrema of each feature.
+	 * Create a new UniformFeatureScaler for some vector set. This
+	 * function will calculate the extrema for each dimension and 
+	 * derive the necessary data to scale future data.
 	 * 
-	 * @param vectors
+	 * @param vectors The set of vectors to use for scaling.
+	 * @param lower The lower bound of the interval.
+	 * @param upper The upper bound of the interval.
 	 */
-	public DefaultFeatureScaler(VectorSet vectors) {
-		dimension = vectors.getDimension();
-		extrema = getExtrema(vectors.getData().keySet());
+	public UniformFeatureScaler(VectorSet vectors, double lower, double upper) {
+		this.dimension = vectors.getDimension();
+		final double[][] extrema = getExtrema(vectors.getData().keySet());
+		
+		offsets = getOffsets(extrema, lower, upper);
+		scales = getScales(extrema, lower, upper);
 	}
-
-	public void scale(VectorSet vectors, double lower, double upper) {
-		final double[] scales = getScales(lower, upper);
-		final double[] offsets = getOffsets(lower, upper);
-
+	
+	/**
+	 * Scale a set of vectors. This method works in place and will
+	 * modify the vector set.
+	 */
+	public void scale(VectorSet vectors) {
 		for(double[] v: vectors.getData().keySet()) {
 			for(int i = 0; i < dimension; i++) {
 				v[i] = v[i] * scales[i] + offsets[i];
 			}
 		}
 	}
-	
-	public void scale(double[] vector, double lower, double upper) {
-		final double[] scales = getScales(lower, upper);
-		final double[] offsets = getOffsets(lower, upper);
 
+	/**
+	 * Scale a single vector. This method works in place and will
+	 * modify the given vector.
+	 */
+	public void scale(double[] vector) {
 		for(int i = 0; i < dimension; i++) {
 			vector[i] = vector[i] * scales[i] + offsets[i];
 		}
 	}
-	
+
 	@Export(ModelType.FEATURE_SCALING)
 	public void export(ExportVisitor exporter) {
 		ExportVisitor.Parameters params = exporter.newParametersInstance();
-		params.setParameter("extrema", extrema);
+		params.setParameter("scales", scales);
+		params.setParameter("offsets", offsets);
 		exporter.setScaling(this.getClass().getName(), params);
 	}
 	
 	@Import(ModelType.FEATURE_SCALING)
 	public static FeatureScaler newInstance(Map<String, Object> params) {
-		double[][] extrema = (double[][])params.get("extrema");
+		double[] scales = (double[])params.get("scales");
+		double[] offsets = (double[])params.get("offsets");
 		
-		return new DefaultFeatureScaler(extrema);
+		return new UniformFeatureScaler(scales, offsets);
 	}
-	
+
 	/*
 	 * Get the maximum and minimum of each feature.
 	 */
@@ -123,7 +135,7 @@ public class DefaultFeatureScaler implements FeatureScaler {
 	 * 
 	 *   offset = (lower * b - upper * a) / (b - a)
 	 */
-	private double[] getOffsets(double lower, double upper) {
+	private double[] getOffsets(double[][] extrema, double lower, double upper) {
 		double[] offsets = new double[dimension];
 		
 		for(int i = 0; i < dimension; i++) {
@@ -133,7 +145,7 @@ public class DefaultFeatureScaler implements FeatureScaler {
 		return offsets;
 	}
 	
-	private double[] getScales(double lower, double upper) {
+	private double[] getScales(double[][] extrema, double lower, double upper) {
 		double[] scales = new double[dimension];
 
 		for(int i = 0; i < dimension; i++) {
