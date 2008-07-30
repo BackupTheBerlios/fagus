@@ -31,7 +31,7 @@ import select.subset.CriterionFunction;
 public class OscillatingSearch extends NestedSubsetAlgorithm {
 	private static final double DEFAULT_DELTA = 0.5;
 	private enum State {DOWNSWING, DOWNSWING_FAILED, UPSWING, UPSWING_FAILED}
-	private CloneableFeatureSpace featureSpace;
+//	private CloneableFeatureSpace featureSpace;
 	
 	@Override
 	public void setInitialCandidate(Collection<Integer> features) {
@@ -39,15 +39,10 @@ public class OscillatingSearch extends NestedSubsetAlgorithm {
 		candidate = new TreeSet<Integer>(features);
 	}
 	
-	@Override
-	public void setFeatureSpace(FeatureSpace featureSpace) {
-		// the feature space must be Cloneable
-		assert(false);
-	}
-	
-	public void setFeatureSpace(CloneableFeatureSpace featureSpace) {
-		this.featureSpace = featureSpace;
-	}
+//	@Override
+//	public void setFeatureSpace(FeatureSpace featureSpace) {
+//		this.featureSpace = (CloneableFeatureSpace)featureSpace;
+//	}
 	
 	@Override
 	protected void doRun(CriterionFunction f, Iterable<Integer> features, int dimension, int targetSize) {
@@ -77,7 +72,7 @@ public class OscillatingSearch extends NestedSubsetAlgorithm {
 			NestedSubsetAlgorithm fs = new ForwardSelection();
 			fs.setSelectionComparator(selectionComparator);
 			try {
-				fs.setFeatureSpace(featureSpace.clone());
+				fs.setFeatureSpace(((CloneableFeatureSpace)featureSpace).clone());
 			} catch(CloneNotSupportedException e) {
 				// cannot happen
 			}
@@ -115,7 +110,7 @@ public class OscillatingSearch extends NestedSubsetAlgorithm {
 				alg = new SequentialBackwardFloatingSearch();
 				alg.setSelectionComparator(selectionComparator);
 				try {
-					alg.setFeatureSpace(featureSpace.clone());
+					alg.setFeatureSpace(((CloneableFeatureSpace)featureSpace).clone());
 				} catch(CloneNotSupportedException e) {
 					// cannot happen
 				}
@@ -148,7 +143,7 @@ public class OscillatingSearch extends NestedSubsetAlgorithm {
 				alg = new SequentialForwardFloatingSearch();
 				alg.setSelectionComparator(selectionComparator);
 				try {
-					alg.setFeatureSpace(featureSpace.clone());
+					alg.setFeatureSpace(((CloneableFeatureSpace)featureSpace).clone());
 				} catch(CloneNotSupportedException e) {
 					// cannot happen
 				}
@@ -211,7 +206,7 @@ public class OscillatingSearch extends NestedSubsetAlgorithm {
 				alg = new SequentialForwardFloatingSearch();
 				alg.setSelectionComparator(selectionComparator);
 				try {
-					alg.setFeatureSpace(featureSpace.clone());
+					alg.setFeatureSpace(((CloneableFeatureSpace)featureSpace).clone());
 				} catch(CloneNotSupportedException e) {
 					// cannot happen
 				}
@@ -244,7 +239,7 @@ public class OscillatingSearch extends NestedSubsetAlgorithm {
 				alg = new SequentialBackwardFloatingSearch();
 				alg.setSelectionComparator(selectionComparator);
 				try {
-					alg.setFeatureSpace(featureSpace.clone());
+					alg.setFeatureSpace(((CloneableFeatureSpace)featureSpace).clone());
 				} catch(CloneNotSupportedException e) {
 					// cannot happen
 				}
