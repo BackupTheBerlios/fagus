@@ -34,6 +34,9 @@ Statistics:
 Design Issues:
 ==============
 
+- Make unit tests for example section independent of library unit
+  tests. Make sure that the example tests do not require JAI.
+
 - Use some 'setParameter(String name, Object value)' to allow arbitrary 
   parameters for classifiers. Classifiers might require other parameters 
   than doubles, vectors, or matrices. Maybe create an interface
