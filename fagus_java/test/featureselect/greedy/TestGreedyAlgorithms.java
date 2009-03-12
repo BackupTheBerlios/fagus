@@ -19,13 +19,13 @@ public class TestGreedyAlgorithms {
 	private static CriterionFunction[] f;
 	private static double[] results;
 	private static VectorSet vectors;
-	private static final int N = 48;     // number of available feature	
-	private static final int M = N - 16; // number of features to drop
+	private static final int N = 46;     // number of available feature
+	private static final int M = N - 17; // number of features to drop
 	
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		f = new CriterionFunction[2];
-		results = new double[2];
+		f = new CriterionFunction[3];
+		results = new double[3];
 		
 		f[0] = new CriterionFunction() {
 			public void initialize(int dimension, VectorSet data) {}
@@ -57,13 +57,36 @@ public class TestGreedyAlgorithms {
 				double sum = 0.0;
 				
 				for(int i = 0; i < features.length; i++) {
-					sum += M - features[i];
+					sum += N - features[i];
 				}
 				
 				return sum;
 			}
 		};
-		results[1] = (M * (M + 1) - (N - M) * (N - M + 1)) / 2;
+		results[1] = N * (N - M) - (N - M - 1) * (N - M) / 2;
+		
+		f[2] = new CriterionFunction() {
+			public void initialize(int dimension, VectorSet data) {}
+			
+			public double getCriterionValue() {
+				return 0.0;
+			}
+			
+			public double getCriterionValue(int[] features) {
+				double sum = 0.0;
+				
+				for(int i = 0; i < features.length; i++) {
+					sum += features[i] % (N / 2);
+				}
+				
+				return sum;
+			}
+		};
+		if( ((N-M) % 2) == 0 ) {
+			results[2] = N/2 * (N/2 - 1) - M/2 * (M/2 - 1);
+		} else {
+			results[2] = N/2 * (N/2 - 1) - (M+1)/2 * ((M+1)/2 - 1) + ((M+1)/2 - 1);
+		}
 		
 		vectors = new VectorSet(null, new String[N]);
 	}
